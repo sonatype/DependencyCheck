@@ -1,0 +1,7 @@
+org.owasp.dependencycheck.data.ossindex.detectors.MavenDetector
+org.owasp.dependencycheck.data.ossindex.detectors.NpmDetector
+org.owasp.dependencycheck.data.ossindex.detectors.NugetDetector
+org.owasp.dependencycheck.data.ossindex.detectors.ComposerDetector
+org.owasp.dependencycheck.data.ossindex.detectors.PypiDetector
+org.owasp.dependencycheck.data.ossindex.detectors.GemDetector
+org.owasp.dependencycheck.data.ossindex.detectors.SwiftDetector

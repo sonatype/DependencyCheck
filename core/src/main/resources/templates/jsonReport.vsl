@@ -19,7 +19,8 @@
         "reportDate": "$scanDateXML",
         "credits": {
             "NVD": "This report contains data retrieved from the National Vulnerability Database: http://nvd.nist.gov",
-            "NSP": "This report may contain data retrieved from the Node Security Platform: https://nodesecurity.io"
+            "NSP": "This report may contain data retrieved from the Node Security Platform: https://nodesecurity.io",
+            "OSSINDEX": "This report may contain data retrieved from the Sonatype OSS Index: https://ossindex.sonatype.org"
         }
     },
     "dependencies": [
