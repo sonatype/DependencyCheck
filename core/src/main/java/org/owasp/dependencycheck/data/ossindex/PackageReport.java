@@ -8,7 +8,7 @@ import java.util.List;
 // NOTE: this is based on the current v2 REST api, but likely to change
 
 /**
- * ???
+ * Package report information gathered from Sonatype OSS Index.
  *
  * @since ???
  *
