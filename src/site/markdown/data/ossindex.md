@@ -8,7 +8,7 @@ to include in the report.
 Package detection is based on evidence collected from other analyzers and generates
 a normalized package identifier that is attached to the dependency information.
 
-Normalized package identifier is roughly [PURL-ish][2]:
+Normalized package identifiers are roughly [PURL-ish][2]:
 
     <format>:[<namespace>/]<name>@<version
 
