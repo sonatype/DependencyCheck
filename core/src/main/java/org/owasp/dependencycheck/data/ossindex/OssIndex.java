@@ -67,7 +67,10 @@ public class OssIndex {
         if (status == HttpURLConnection.HTTP_OK) {
             try (InputStream input = connection.getInputStream()) {
                 List<PackageReport> results = marshaller.unmarshal(input);
-                // FIXME: sanity, this returns a list but for the endpoint we are using it should only contain a single entry
+                if (results.isEmpty()) {
+                    throw new RuntimeException("Request returned zero results");
+                }
+                // for format/package/version requests only 1 entry is expected, pluck off the first entry
                 return results.get(0);
             }
         }
