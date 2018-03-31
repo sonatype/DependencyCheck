@@ -25,6 +25,8 @@ public class OssIndex {
 
     private final URLConnectionFactory connectionFactory;
 
+    private final UserAgentProvider userAgent;
+
     private final PackageReportMarshaller marshaller;
 
     public OssIndex(final Settings settings) {
@@ -40,6 +42,7 @@ public class OssIndex {
         log.debug("Base URL: {}", baseUrl);
 
         connectionFactory = new URLConnectionFactory(settings);
+        userAgent = new UserAgentProvider(settings);
         marshaller = new PackageReportMarshaller();
     }
 
@@ -49,6 +52,10 @@ public class OssIndex {
         URL url = new URL(String.format("%s/v2.0/package/%s/%s/%s", baseUrl, id.getFormat(), id.getName(), id.getVersion()));
         HttpURLConnection connection = connectionFactory.createHttpURLConnection(url);
         connection.setDoOutput(true);
+
+        // TODO: this could potentially be moved to URLConnectionFactory?
+        userAgent.apply(connection);
+
         connection.addRequestProperty("Accept", "application/json");
 
         log.debug("Connecting to: {}", url);
@@ -57,7 +64,7 @@ public class OssIndex {
         // TODO: consider minimal retry logic?
 
         int status = connection.getResponseCode();
-        if (status == 200) {
+        if (status == HttpURLConnection.HTTP_OK) {
             try (InputStream input = connection.getInputStream()) {
                 List<PackageReport> results = marshaller.unmarshal(input);
                 // FIXME: sanity, this returns a list but for the endpoint we are using it should only contain a single entry

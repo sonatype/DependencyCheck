@@ -52,8 +52,6 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
 
     @Override
     protected void prepareAnalyzer(final Engine engine) throws InitializationException {
-        log.debug("Initializing {}", getName());
-
         detectors = loadDetectors();
 
         if (log.isDebugEnabled()) {

@@ -45,7 +45,6 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
     @Override
     protected void prepareAnalyzer(final Engine engine) throws InitializationException {
-        log.debug("Initializing {}", getName());
         index = new OssIndex(getSettings());
     }
 
