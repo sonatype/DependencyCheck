@@ -222,7 +222,7 @@ public class Check extends Update {
     private Boolean swiftPackageManagerAnalyzerEnabled;
 
     /**
-     * True to enable the Sonatype OSS Index analyzer.
+     * Whether or not the Sonatype OSS Index analyzer is enabled.
      */
     private Boolean ossindexAnalyzerEnabled;
 
