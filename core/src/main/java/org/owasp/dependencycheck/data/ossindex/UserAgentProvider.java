@@ -16,6 +16,8 @@ public class UserAgentProvider {
 
     private String userAgent;
 
+    // TODO: consider if we want to include the flavor of DC check (cli,maven,ant,etc)?
+
     public UserAgentProvider(final Settings settings) {
         userAgent = String.format("%s/%s (%s; %s; %s; %s)",
                 "dependency-check", // Settings.KEYS.APPLICATION_NAME may have been customized and contain spaces
