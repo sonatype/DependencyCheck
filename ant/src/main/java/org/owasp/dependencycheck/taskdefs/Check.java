@@ -220,6 +220,17 @@ public class Check extends Update {
      * Whether or not the Swift package Analyzer is enabled.
      */
     private Boolean swiftPackageManagerAnalyzerEnabled;
+
+    /**
+     * True to enable the Sonatype OSS Index analyzer.
+     */
+    private Boolean ossindexAnalyzerEnabled;
+
+    /**
+     * URL of the Sonatype OSS Index service.
+     */
+    private String ossindexAnalyzerUrl;
+
     //The following code was copied Apache Ant PathConvert
     //BEGIN COPY from org.apache.tools.ant.taskdefs.PathConvert
     /**
@@ -968,6 +979,34 @@ public class Check extends Update {
         this.pathToMono = pathToMono;
     }
 
+    /**
+     * Get value of {@link #ossindexAnalyzerEnabled}.
+     */
+    public Boolean isOssindexAnalyzerEnabled() {
+        return ossindexAnalyzerEnabled;
+    }
+
+    /**
+     * Set value of {@link #ossindexAnalyzerEnabled}.
+     */
+    public void setOssindexAnalyzerEnabled(Boolean ossindexAnalyzerEnabled) {
+        this.ossindexAnalyzerEnabled = ossindexAnalyzerEnabled;
+    }
+
+    /**
+     * Get value of {@link #ossindexAnalyzerUrl}.
+     */
+    public String getOssindexAnalyzerUrl() {
+        return ossindexAnalyzerUrl;
+    }
+
+    /**
+     * Set value of {@link #ossindexAnalyzerUrl}.
+     */
+    public void setOssindexAnalyzerUrl(String ossindexAnalyzerUrl) {
+        this.ossindexAnalyzerUrl = ossindexAnalyzerUrl;
+    }
+
     @Override
     public void execute() throws BuildException {
         dealWithReferences();
@@ -1079,6 +1118,8 @@ public class Check extends Update {
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NEXUS_USES_PROXY, nexusUsesProxy);
         getSettings().setStringIfNotEmpty(Settings.KEYS.ADDITIONAL_ZIP_EXTENSIONS, zipExtensions);
         getSettings().setStringIfNotEmpty(Settings.KEYS.ANALYZER_ASSEMBLY_MONO_PATH, pathToMono);
+        getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_OSSINDEX_ENABLED, ossindexAnalyzerEnabled);
+        getSettings().setStringIfNotEmpty(Settings.KEYS.ANALYZER_OSSINDEX_URL, ossindexAnalyzerUrl);
     }
 
     /**
