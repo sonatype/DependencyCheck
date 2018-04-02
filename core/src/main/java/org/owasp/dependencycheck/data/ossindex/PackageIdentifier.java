@@ -21,7 +21,7 @@ public class PackageIdentifier {
 
     private final String format;
 
-    // TODO: consider adding namespace for purl-ish parity?
+    // TODO: consider adding group/namespace for purl-ish parity?
 
     private final String name;
 

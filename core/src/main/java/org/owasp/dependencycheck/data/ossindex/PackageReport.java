@@ -20,6 +20,8 @@ public class PackageReport {
     @SerializedName("pm")
     private String format;
 
+    private String group;
+
     private String name;
 
     private String version;
@@ -139,6 +141,14 @@ public class PackageReport {
 
     public void setFormat(String format) {
         this.format = format;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     public String getName() {
