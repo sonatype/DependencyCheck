@@ -7,7 +7,7 @@ import org.sonatype.ossindex.client.OssIndex;
 import org.sonatype.ossindex.client.internal.*;
 import org.sonatype.ossindex.client.transport.HttpUrlConnectionTransport;
 import org.sonatype.ossindex.client.transport.Transport;
-import org.sonatype.ossindex.client.transport.UserAgentProvider;
+import org.sonatype.ossindex.client.transport.UserAgent;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -27,7 +27,9 @@ public class OssIndexFactory {
         URL baseUrl = Urls.create(value);
 
         final URLConnectionFactory connectionFactory = new URLConnectionFactory(settings);
-        final UserAgentProvider userAgentProvider = new UserAgentProvider(
+
+        // customize User-Agent for use with dependency-check
+        final UserAgent userAgent = new UserAgent(
                 "dependency-check",
                 settings.getString(Settings.KEYS.APPLICATION_VERSION, "Unknown")
         );
@@ -37,7 +39,7 @@ public class OssIndexFactory {
             @Override
             protected HttpURLConnection connect(final URL url) throws IOException {
                 HttpURLConnection connection = connectionFactory.createHttpURLConnection(url);
-                connection.setRequestProperty(HttpHeaders.USER_AGENT, userAgentProvider.get());
+                connection.setRequestProperty(HttpHeaders.USER_AGENT, userAgent.get());
                 return connection;
             }
         };
