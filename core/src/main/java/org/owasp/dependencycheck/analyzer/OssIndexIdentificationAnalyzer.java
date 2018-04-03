@@ -82,6 +82,7 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
         PackageIdentifier pid = identify(dependency);
         if (pid != null) {
             Identifier id = new Identifier("ossindex", pid.getValue(), null);
+            // FIXME: confidence is optional on Identifier, but required to be set to avoid NPE in report generation
             id.setConfidence(Confidence.HIGH);
             dependency.addIdentifier(id);
         }
