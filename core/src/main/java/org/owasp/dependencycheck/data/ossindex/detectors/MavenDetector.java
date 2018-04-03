@@ -3,11 +3,11 @@ package org.owasp.dependencycheck.data.ossindex.detectors;
 import org.owasp.dependencycheck.analyzer.JarAnalyzer;
 import org.owasp.dependencycheck.data.ossindex.EvidenceExtractor;
 import org.owasp.dependencycheck.data.ossindex.PackageDetector;
-import org.owasp.dependencycheck.data.ossindex.PackageIdentifier;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Evidence;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.dependency.Identifier;
+import org.sonatype.ossindex.client.PackageIdentifier;
 
 import javax.annotation.Nullable;
 
@@ -32,6 +32,7 @@ public class MavenDetector extends PackageDetectorSupport {
     @Nullable
     @Override
     protected PackageIdentifier doDetect(final Dependency dependency) {
+        String group = null;
         String name = dependency.getName();
         String version = dependency.getVersion();
 
@@ -42,7 +43,8 @@ public class MavenDetector extends PackageDetectorSupport {
                 // expected to be "<g>:<a>:<v>"
                 String[] parts = mid.getValue().split(":", 3);
                 if (parts.length == 3) {
-                    name = String.format("%s/%s", parts[0], parts[1]);
+                    group = parts[0];
+                    name = parts[1];
                     version = parts[2];
                 }
             }
@@ -65,7 +67,8 @@ public class MavenDetector extends PackageDetectorSupport {
                     .extract(dependency);
 
             if (gid != null && aid != null) {
-                name = String.format("%s/%s", gid.getValue(), aid.getValue());
+                group = gid.getValue();
+                name = aid.getValue();
             }
         }
 
@@ -81,7 +84,7 @@ public class MavenDetector extends PackageDetectorSupport {
         }
 
         if (name != null && version != null) {
-            return new PackageIdentifier(format, name, version);
+            return new PackageIdentifier(format, group, name, version);
         }
 
         return null;

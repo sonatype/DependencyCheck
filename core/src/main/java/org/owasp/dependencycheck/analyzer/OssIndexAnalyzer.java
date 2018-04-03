@@ -2,9 +2,7 @@ package org.owasp.dependencycheck.analyzer;
 
 import org.owasp.dependencycheck.Engine;
 import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
-import org.owasp.dependencycheck.data.ossindex.OssIndex;
-import org.owasp.dependencycheck.data.ossindex.PackageIdentifier;
-import org.owasp.dependencycheck.data.ossindex.PackageReport;
+import org.owasp.dependencycheck.data.ossindex.OssIndexFactory;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Identifier;
 import org.owasp.dependencycheck.dependency.Vulnerability;
@@ -13,8 +11,13 @@ import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.ossindex.client.OssIndex;
+import org.sonatype.ossindex.client.PackageIdentifier;
+import org.sonatype.ossindex.client.PackageReport;
 
 import java.util.Collections;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Enrich dependency information from Sonatype OSS index.
@@ -45,7 +48,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
     @Override
     protected void prepareAnalyzer(final Engine engine) throws InitializationException {
-        index = new OssIndex(getSettings());
+        index = OssIndexFactory.create(getSettings());
     }
 
     @Override
@@ -56,10 +59,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     // HACK: sync for logging sanity only
     @Override
     protected synchronized void analyzeDependency(final Dependency dependency, final Engine engine) throws AnalysisException {
-        if (index == null) {
-            throw new IllegalStateException();
-        }
-
+        checkState(index != null);
         enrich(dependency);
     }
 
@@ -67,12 +67,12 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         log.debug("Enrich dependency: {}", dependency);
 
         for (Identifier id : dependency.getIdentifiers()) {
-            if (PackageIdentifier.TYPE.equals(id.getType())) {
+            if ("ossindex".equals(id.getType())) {
                 log.debug("  Package: {} -> {}", id, id.getConfidence());
 
                 PackageIdentifier pid = PackageIdentifier.parse(id.getValue());
                 try {
-                    PackageReport report = index.request(pid);
+                    PackageReport report = index.request(pid.toRequest());
 
                     // expose the URL to the package details for report generation
                     id.setUrl(index.packageUrl(report).toExternalForm());

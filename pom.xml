@@ -831,6 +831,11 @@ Copyright (c) 2012 - Jeremy Long
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.sonatype.ossindex</groupId>
+                <artifactId>ossindex-java-client</artifactId>
+                <version>1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
                 <groupId>com.vdurmont</groupId>
                 <artifactId>semver4j</artifactId>
                 <version>2.1.0</version>

@@ -1,6 +1,7 @@
 package org.owasp.dependencycheck.data.ossindex;
 
 import org.owasp.dependencycheck.dependency.Dependency;
+import org.sonatype.ossindex.client.PackageIdentifier;
 
 import javax.annotation.Nullable;
 

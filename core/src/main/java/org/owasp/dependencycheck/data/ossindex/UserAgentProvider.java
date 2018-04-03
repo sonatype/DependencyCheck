@@ -11,7 +11,7 @@ import java.net.HttpURLConnection;
  *
  * @since ???
  */
-public class UserAgentProvider {
+public class UserAgentProvider implements org.sonatype.ossindex.client.UserAgentProvider  {
     private static final Logger log = LoggerFactory.getLogger(UserAgentProvider.class);
 
     private String userAgent;

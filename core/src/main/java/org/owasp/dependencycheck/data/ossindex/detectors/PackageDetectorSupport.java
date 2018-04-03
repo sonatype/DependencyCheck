@@ -1,11 +1,11 @@
 package org.owasp.dependencycheck.data.ossindex.detectors;
 
 import org.owasp.dependencycheck.data.ossindex.PackageDetector;
-import org.owasp.dependencycheck.data.ossindex.PackageIdentifier;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.ossindex.client.PackageIdentifier;
 
 import javax.annotation.Nullable;
 

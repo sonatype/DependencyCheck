@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Helper to extract {@link Evidence} from a {@link Dependency}.
  *
@@ -49,21 +52,11 @@ public class EvidenceExtractor {
 
     @Nullable
     public Evidence extract(final Dependency dependency) {
-        if (dependency == null) {
-            throw new NullPointerException();
-        }
-        if (confidences == null) {
-            throw new IllegalStateException();
-        }
-        if (types == null) {
-            throw new IllegalStateException();
-        }
-        if (names == null) {
-            throw new IllegalStateException();
-        }
-        if (sources == null) {
-            throw new IllegalStateException();
-        }
+        checkNotNull(dependency);
+        checkState(confidences != null);
+        checkState(types != null);
+        checkState(names != null);
+        checkState(sources != null);
 
         log.debug("Extract: types={}, names={}, sources={}", types, Arrays.asList(names), Arrays.asList(sources));
 

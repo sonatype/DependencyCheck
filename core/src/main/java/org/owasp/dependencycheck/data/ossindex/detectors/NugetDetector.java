@@ -3,10 +3,10 @@ package org.owasp.dependencycheck.data.ossindex.detectors;
 import org.owasp.dependencycheck.analyzer.NuspecAnalyzer;
 import org.owasp.dependencycheck.data.ossindex.EvidenceExtractor;
 import org.owasp.dependencycheck.data.ossindex.PackageDetector;
-import org.owasp.dependencycheck.data.ossindex.PackageIdentifier;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Evidence;
 import org.owasp.dependencycheck.dependency.EvidenceType;
+import org.sonatype.ossindex.client.PackageIdentifier;
 
 import javax.annotation.Nullable;
 

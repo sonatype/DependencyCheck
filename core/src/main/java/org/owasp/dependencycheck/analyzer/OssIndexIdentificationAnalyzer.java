@@ -3,15 +3,12 @@ package org.owasp.dependencycheck.analyzer;
 import org.owasp.dependencycheck.Engine;
 import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
 import org.owasp.dependencycheck.data.ossindex.PackageDetector;
-import org.owasp.dependencycheck.data.ossindex.PackageIdentifier;
-import org.owasp.dependencycheck.dependency.Dependency;
-import org.owasp.dependencycheck.dependency.Evidence;
-import org.owasp.dependencycheck.dependency.EvidenceType;
-import org.owasp.dependencycheck.dependency.Identifier;
+import org.owasp.dependencycheck.dependency.*;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.ossindex.client.PackageIdentifier;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -84,7 +81,9 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
 
         PackageIdentifier pid = identify(dependency);
         if (pid != null) {
-            dependency.addIdentifier(pid.asIdentifier());
+            Identifier id = new Identifier("ossindex", pid.getValue(), null);
+            id.setConfidence(Confidence.HIGH);
+            dependency.addIdentifier(id);
         }
     }
 
