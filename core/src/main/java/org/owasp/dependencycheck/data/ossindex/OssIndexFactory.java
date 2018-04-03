@@ -3,7 +3,7 @@ package org.owasp.dependencycheck.data.ossindex;
 import org.owasp.dependencycheck.utils.Settings;
 import org.owasp.dependencycheck.utils.URLConnectionFactory;
 import org.sonatype.ossindex.client.OssIndex;
-import org.sonatype.ossindex.client.Urls;
+import org.sonatype.ossindex.client.internal.Urls;
 import org.sonatype.ossindex.client.UserAgentProvider;
 import org.sonatype.ossindex.client.internal.OssIndexImpl;
 import org.sonatype.ossindex.client.internal.OssIndexProvider;
