@@ -20,7 +20,7 @@ import java.net.URL;
  */
 public class OssIndexFactory {
     public static OssIndex create(final Settings settings) {
-        String value = settings.getString(Settings.KEYS.ANALYZER_OSSINDEX_URL, OssIndexProvider.DEFAULT_URL);
+        String value = settings.getString(Settings.KEYS.ANALYZER_OSSINDEX_URL, OssIndex.DEFAULT_URL);
         if (value.endsWith("/")) {
             value = value.substring(0, value.length() - 1);
         }
