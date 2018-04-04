@@ -14,10 +14,15 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.ossindex.client.OssIndex;
 import org.sonatype.ossindex.client.PackageIdentifier;
 import org.sonatype.ossindex.client.PackageReport;
+import org.sonatype.ossindex.client.PackageRequest;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.owasp.dependencycheck.analyzer.OssIndexIdentificationAnalyzer.IDENTIFIER_TYPE;
 
 /**
  * Enrich dependency information from Sonatype OSS index.
@@ -29,7 +34,11 @@ import static com.google.common.base.Preconditions.checkState;
 public class OssIndexAnalyzer extends AbstractAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(OssIndexAnalyzer.class);
 
+    public static final String REFERENCE_TYPE = "ossindex";
+
     private OssIndex index;
+
+    private Map<PackageRequest,PackageReport> reports;
 
     @Override
     public String getName() {
@@ -54,25 +63,59 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     @Override
     protected void closeAnalyzer() throws Exception {
         index = null;
+        reports = null;
     }
 
-    // HACK: sync for logging sanity only
     @Override
-    protected synchronized void analyzeDependency(final Dependency dependency, final Engine engine) throws AnalysisException {
+    protected void analyzeDependency(final Dependency dependency, final Engine engine) throws AnalysisException {
         checkState(index != null);
+
+        // batch request package-reports for all dependencies
+        synchronized (this) {
+            if (reports == null) {
+                try {
+                    reports = requestReports(engine.getDependencies());
+                }
+                catch (Exception e) {
+                    throw new AnalysisException("Failed to request package-reports", e);
+                }
+            }
+        }
+
         enrich(dependency);
+    }
+
+    /**
+     * Batch request package-reports for all dependencies.
+     */
+    private Map<PackageRequest, PackageReport> requestReports(final Dependency[] dependencies) throws Exception {
+        log.debug("Requesting package-reports for {} dependencies", dependencies.length);
+
+        // create requests for each dependency which has a package-identifier
+        List<PackageRequest> requests = new ArrayList<>();
+        for (Dependency dependency : dependencies) {
+            for (Identifier id : dependency.getIdentifiers()) {
+                if (IDENTIFIER_TYPE.equals(id.getType())) {
+                    PackageIdentifier pid = PackageIdentifier.parse(id.getValue());
+                    requests.add(pid.toRequest());
+                }
+            }
+        }
+
+        return index.request(requests);
     }
 
     private void enrich(final Dependency dependency) {
         log.debug("Enrich dependency: {}", dependency);
 
         for (Identifier id : dependency.getIdentifiers()) {
-            if ("ossindex".equals(id.getType())) {
+            if (IDENTIFIER_TYPE.equals(id.getType())) {
                 log.debug("  Package: {} -> {}", id, id.getConfidence());
 
                 PackageIdentifier pid = PackageIdentifier.parse(id.getValue());
                 try {
-                    PackageReport report = index.request(pid.toRequest());
+                    PackageReport report = reports.get(pid.toRequest());
+                    checkState(report != null, "Missing package-report for: %s", pid);
 
                     // expose the URL to the package details for report generation
                     id.setUrl(index.packageUrl(report).toExternalForm());
@@ -96,7 +139,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         result.setDescription(source.getDescription());
 
         // generate a reference to the vulnerability details on OSS Index
-        result.addReference("ossindex",
+        result.addReference(REFERENCE_TYPE,
                 String.format("%s: %s", source.getId(), source.getTitle()),
                 index.referenceUrl(source).toExternalForm());
 

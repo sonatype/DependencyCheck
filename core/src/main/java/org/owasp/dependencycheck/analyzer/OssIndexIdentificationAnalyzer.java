@@ -30,6 +30,8 @@ import java.util.Set;
 public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(OssIndexIdentificationAnalyzer.class);
 
+    public static final String IDENTIFIER_TYPE = "ossindex";
+
     @Override
     public String getName() {
         return "Sonatype OSS Index Analyzer: Identification";
@@ -72,16 +74,15 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
         return detectors;
     }
 
-    // HACK: sync for logging sanity only
     @Override
-    protected synchronized void analyzeDependency(final Dependency dependency, final Engine engine) throws AnalysisException {
+    protected void analyzeDependency(final Dependency dependency, final Engine engine) throws AnalysisException {
         if (detectors == null) {
             throw new IllegalStateException();
         }
 
         PackageIdentifier pid = identify(dependency);
         if (pid != null) {
-            Identifier id = new Identifier("ossindex", pid.getValue(), null);
+            Identifier id = new Identifier(IDENTIFIER_TYPE, pid.getValue(), null);
             // FIXME: confidence is optional on Identifier, but required to be set to avoid NPE in report generation
             id.setConfidence(Confidence.HIGH);
             dependency.addIdentifier(id);
