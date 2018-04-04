@@ -117,10 +117,6 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.sonatype.ossindex</groupId>
-            <artifactId>ossindex-java-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.vdurmont</groupId>
             <artifactId>semver4j</artifactId>
         </dependency>
@@ -207,6 +203,10 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.ossindex</groupId>
+            <artifactId>ossindex-java-client</artifactId>
         </dependency>
         <!-- The following dependencies are only used during testing 
              and must not be converted to a properties based version number -->
@@ -339,7 +339,6 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
-
     </dependencies>
     <profiles>
         <profile>
