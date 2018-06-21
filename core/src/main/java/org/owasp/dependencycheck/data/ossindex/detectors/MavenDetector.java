@@ -7,7 +7,7 @@ import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Evidence;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.dependency.Identifier;
-import org.sonatype.ossindex.client.PackageIdentifier;
+import org.sonatype.goodies.packageurl.PackageUrl;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +31,7 @@ public class MavenDetector extends PackageDetectorSupport {
 
     @Nullable
     @Override
-    protected PackageIdentifier doDetect(final Dependency dependency) {
+    protected PackageUrl doDetect(final Dependency dependency) {
         String group = null;
         String name = dependency.getName();
         String version = dependency.getVersion();
@@ -84,7 +84,12 @@ public class MavenDetector extends PackageDetectorSupport {
         }
 
         if (name != null && version != null) {
-            return new PackageIdentifier(format, group, name, version);
+            return new PackageUrl.Builder()
+                    .type(format)
+                    .namespace(group)
+                    .name(name)
+                    .version(version)
+                    .build();
         }
 
         return null;

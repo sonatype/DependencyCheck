@@ -1,8 +1,11 @@
 package org.owasp.dependencycheck.analyzer;
 
+import org.sonatype.ossindex.service.api.componentreport.ComponentReport;
+import org.sonatype.ossindex.service.api.componentreport.ComponentReportVulnerability;
+import org.sonatype.ossindex.service.client.OssindexClient;
 import org.owasp.dependencycheck.Engine;
 import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
-import org.owasp.dependencycheck.data.ossindex.OssIndexFactory;
+import org.owasp.dependencycheck.data.ossindex.OssindexClientFactory;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Identifier;
 import org.owasp.dependencycheck.dependency.Vulnerability;
@@ -11,17 +14,13 @@ import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.ossindex.client.OssIndex;
-import org.sonatype.ossindex.client.PackageIdentifier;
-import org.sonatype.ossindex.client.PackageReport;
-import org.sonatype.ossindex.client.PackageRequest;
+import org.sonatype.goodies.packageurl.PackageUrl;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkState;
 import static org.owasp.dependencycheck.analyzer.OssIndexIdentificationAnalyzer.IDENTIFIER_TYPE;
 
 /**
@@ -36,9 +35,9 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
     public static final String REFERENCE_TYPE = "ossindex";
 
-    private OssIndex index;
+    private OssindexClient client;
 
-    private Map<PackageRequest,PackageReport> reports;
+    private Map<PackageUrl,ComponentReport> reports;
 
     @Override
     public String getName() {
@@ -57,18 +56,20 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
     @Override
     protected void prepareAnalyzer(final Engine engine) throws InitializationException {
-        index = OssIndexFactory.create(getSettings());
+        client = OssindexClientFactory.create(getSettings());
     }
 
     @Override
     protected void closeAnalyzer() throws Exception {
-        index = null;
+        client = null;
         reports = null;
     }
 
     @Override
     protected void analyzeDependency(final Dependency dependency, final Engine engine) throws AnalysisException {
-        checkState(index != null);
+        if (client == null) {
+            throw new IllegalStateException();
+        }
 
         // batch request package-reports for all dependencies
         synchronized (this) {
@@ -88,21 +89,21 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     /**
      * Batch request package-reports for all dependencies.
      */
-    private Map<PackageRequest, PackageReport> requestReports(final Dependency[] dependencies) throws Exception {
+    private Map<PackageUrl, ComponentReport> requestReports(final Dependency[] dependencies) throws Exception {
         log.debug("Requesting package-reports for {} dependencies", dependencies.length);
 
         // create requests for each dependency which has a package-identifier
-        List<PackageRequest> requests = new ArrayList<>();
+        List<PackageUrl> packages = new ArrayList<>();
         for (Dependency dependency : dependencies) {
             for (Identifier id : dependency.getIdentifiers()) {
                 if (IDENTIFIER_TYPE.equals(id.getType())) {
-                    PackageIdentifier pid = PackageIdentifier.parse(id.getValue());
-                    requests.add(pid.toRequest());
+                    PackageUrl purl = PackageUrl.parse(id.getValue());
+                    packages.add(purl);
                 }
             }
         }
 
-        return index.request(requests);
+        return client.requestComponentReports(packages);
     }
 
     private void enrich(final Dependency dependency) {
@@ -112,45 +113,49 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
             if (IDENTIFIER_TYPE.equals(id.getType())) {
                 log.debug("  Package: {} -> {}", id, id.getConfidence());
 
-                PackageIdentifier pid = PackageIdentifier.parse(id.getValue());
+                PackageUrl purl = PackageUrl.parse(id.getValue());
                 try {
-                    PackageReport report = reports.get(pid.toRequest());
-                    checkState(report != null, "Missing package-report for: %s", pid);
+                    ComponentReport report = reports.get(purl);
+                    if (report == null) {
+                        throw new IllegalStateException("Missing package-report for: " + purl);
+                    }
 
                     // expose the URL to the package details for report generation
-                    id.setUrl(index.packageUrl(report).toExternalForm());
+                    id.setUrl(report.getReference().toString());
 
-                    for (PackageReport.Vulnerability vuln : report.getVulnerabilities()) {
+                    for (ComponentReportVulnerability vuln : report.getVulnerabilities()) {
                         dependency.addVulnerability(transform(report, vuln));
                     }
                 }
                 catch (Exception e) {
-                    log.warn("Failed to fetch package-report for: {}", pid, e);
+                    log.warn("Failed to fetch package-report for: {}", purl, e);
                 }
             }
         }
     }
 
-    private Vulnerability transform(final PackageReport report, final PackageReport.Vulnerability source) {
+    private Vulnerability transform(final ComponentReport report, final ComponentReportVulnerability source) {
         Vulnerability result = new Vulnerability();
         result.setSource(Vulnerability.Source.OSSINDEX);
 
         result.setName(String.format("%s: %s", source.getId(), source.getTitle()));
         result.setDescription(source.getDescription());
+        if (source.getCvssScore() != null) {
+            result.setCvssScore(source.getCvssScore());
+        }
+        result.setCvssAccessVector(source.getCvssVector());
+        result.setCwe(source.getCwe());
 
         // generate a reference to the vulnerability details on OSS Index
         result.addReference(REFERENCE_TYPE,
                 String.format("%s: %s", source.getId(), source.getTitle()),
-                index.referenceUrl(source).toExternalForm());
+                source.getReference().toString());
 
         // TODO: its not really clear what this is and how it maps the OSS Index report
         VulnerableSoftware software = new VulnerableSoftware();
-        software.setName(report.getName());
-        software.setVersion(report.getVersion());
+        software.setName(report.getCoordinates().getName());
+        software.setVersion(report.getCoordinates().getVersion());
         result.setVulnerableSoftware(Collections.singleton(software));
-
-        // TODO: some key information, like severity and cvss details which the report wants, are missing
-        // TODO: what else can we transform here?
 
         return result;
     }

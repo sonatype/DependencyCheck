@@ -1013,7 +1013,7 @@ Copyright (c) 2012 - Jeremy Long
             </dependency>
             <dependency>
                 <groupId>org.sonatype.ossindex</groupId>
-                <artifactId>ossindex-java-client</artifactId>
+                <artifactId>ossindex-service-client</artifactId>
                 <version>1-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>

@@ -236,7 +236,7 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
         </dependency>
         <dependency>
             <groupId>org.sonatype.ossindex</groupId>
-            <artifactId>ossindex-java-client</artifactId>
+            <artifactId>ossindex-service-client</artifactId>
         </dependency>
         <!-- The following dependencies are only used during testing 
              and must not be converted to a properties based version number -->

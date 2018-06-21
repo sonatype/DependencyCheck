@@ -5,7 +5,7 @@ import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.ossindex.client.PackageIdentifier;
+import org.sonatype.goodies.packageurl.PackageUrl;
 
 import javax.annotation.Nullable;
 
@@ -28,13 +28,13 @@ public abstract class PackageDetectorSupport implements PackageDetector {
 
     @Nullable
     @Override
-    public PackageIdentifier detect(final Dependency dependency) {
+    public PackageUrl detect(final Dependency dependency) {
         String ecosystem = dependency.getEcosystem();
         for (String accept : this.ecosystems) {
             if (accept.equals(ecosystem)) {
-                PackageIdentifier id = doDetect(dependency);
-                if (id != null) {
-                    return id;
+                PackageUrl purl = doDetect(dependency);
+                if (purl != null) {
+                    return purl;
                 }
             }
         }
@@ -43,11 +43,16 @@ public abstract class PackageDetectorSupport implements PackageDetector {
     }
 
     @Nullable
-    protected PackageIdentifier doDetect(final Dependency dependency) {
+    protected PackageUrl doDetect(final Dependency dependency) {
         String name = dependency.getName();
         String version = dependency.getVersion();
         if (name != null && version != null) {
-            return new PackageIdentifier(format, name, version);
+            // FIXME: adjust for name vs. namespace
+            return new PackageUrl.Builder()
+                    .type(format)
+                    .name(name)
+                    .version(version)
+                    .build();
         }
         return null;
     }

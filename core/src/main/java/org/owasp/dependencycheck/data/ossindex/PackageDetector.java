@@ -1,17 +1,17 @@
 package org.owasp.dependencycheck.data.ossindex;
 
 import org.owasp.dependencycheck.dependency.Dependency;
-import org.sonatype.ossindex.client.PackageIdentifier;
+import org.sonatype.goodies.packageurl.PackageUrl;
 
 import javax.annotation.Nullable;
 
 /**
- * Detect {@link PackageIdentifier} from {@link Dependency}.
+ * Detect {@link PackageUrl} from {@link Dependency}.
  *
  * @since ???
  */
 public interface PackageDetector
 {
     @Nullable
-    PackageIdentifier detect(Dependency dependency);
+    PackageUrl detect(Dependency dependency);
 }

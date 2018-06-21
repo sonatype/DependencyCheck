@@ -8,7 +8,7 @@ import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.ossindex.client.PackageIdentifier;
+import org.sonatype.goodies.packageurl.PackageUrl;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -80,9 +80,9 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
             throw new IllegalStateException();
         }
 
-        PackageIdentifier pid = identify(dependency);
-        if (pid != null) {
-            Identifier id = new Identifier(IDENTIFIER_TYPE, pid.toString(), null);
+        PackageUrl purl = identify(dependency);
+        if (purl != null) {
+            Identifier id = new Identifier(IDENTIFIER_TYPE, purl.toString(), null);
             // FIXME: confidence is optional on Identifier, but required to be set to avoid NPE in report generation
             id.setConfidence(Confidence.HIGH);
             dependency.addIdentifier(id);
@@ -90,7 +90,7 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
     }
 
     @Nullable
-    private PackageIdentifier identify(final Dependency dependency) {
+    private PackageUrl identify(final Dependency dependency) {
         log.debug("Identify dependency: {}", dependency);
 
         if (log.isDebugEnabled()) {
@@ -99,12 +99,12 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
 
         for (PackageDetector detector : detectors) {
             log.debug("Detecting with: {}", detector);
-            PackageIdentifier id = detector.detect(dependency);
+            PackageUrl purl = detector.detect(dependency);
 
             // first detected wins
-            if (id != null) {
-                log.debug("  Package: {}", id);
-                return id;
+            if (purl != null) {
+                log.debug("  Package: {}", purl);
+                return purl;
             }
         }
 
