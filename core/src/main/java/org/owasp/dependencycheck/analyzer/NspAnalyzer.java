@@ -43,6 +43,7 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+import org.owasp.dependencycheck.analyzer.exception.SearchException;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.InvalidSettingException;
 import org.owasp.dependencycheck.utils.URLConnectionFailureException;
@@ -214,13 +215,16 @@ public class NspAnalyzer extends AbstractNpmAnalyzer {
             }
         } catch (URLConnectionFailureException e) {
             this.setEnabled(false);
-            throw new AnalysisException(e.getMessage(), e);
+            throw new AnalysisException("Failed to connect to the Node Security Project (NspAnalyzer); the analyzer is being disabled and may result in false negatives.", e);
         } catch (IOException e) {
             LOGGER.debug("Error reading dependency or connecting to Node Security Platform - check API", e);
             this.setEnabled(false);
-            throw new AnalysisException(e.getMessage(), e);
+            throw new AnalysisException("Failed to read results from the Node Security Project (NspAnalyzer); the analyzer is being disabled and may result in false negatives.", e);
         } catch (JsonException e) {
-            throw new AnalysisException(String.format("Failed to parse %s file.", file.getPath()), e);
+            throw new AnalysisException(String.format("Failed to parse %s file from the Node Security Platform (NspAnalyzer).", file.getPath()), e);
+        } catch (SearchException ex) {
+            LOGGER.error("NspAnalyzer failed on {}", dependency.getActualFilePath());
+            throw ex;
         }
     }
 }

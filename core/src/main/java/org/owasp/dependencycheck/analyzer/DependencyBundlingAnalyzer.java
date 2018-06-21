@@ -170,7 +170,9 @@ public class DependencyBundlingAnalyzer extends AbstractDependencyComparingAnaly
             dependency.addRelatedDependency(d);
             relatedDependency.removeRelatedDependencies(d);
         }
-        if (dependency.getSha1sum().equals(relatedDependency.getSha1sum())) {
+        //TODO this null check was added for #1296 - but I believe this to be related to virtual dependencies
+        //  we may want to merge project references on virtual dependencies...
+        if (dependency.getSha1sum() != null && dependency.getSha1sum().equals(relatedDependency.getSha1sum())) {
             dependency.addAllProjectReferences(relatedDependency.getProjectReferences());
         }
         if (dependenciesToRemove != null) {
@@ -293,8 +295,8 @@ public class DependencyBundlingAnalyzer extends AbstractDependencyComparingAnaly
      * @return true if the two dependencies have the same vulnerabilities
      */
     private boolean vulnerabilitiesMatch(Dependency dependency1, Dependency dependency2) {
-        Set<Vulnerability> one = dependency1.getVulnerabilities();
-        Set<Vulnerability> two = dependency2.getVulnerabilities();
+        final Set<Vulnerability> one = dependency1.getVulnerabilities();
+        final Set<Vulnerability> two = dependency2.getVulnerabilities();
         return one != null && two != null
                 && one.size() == two.size()
                 && one.containsAll(two);
@@ -333,7 +335,7 @@ public class DependencyBundlingAnalyzer extends AbstractDependencyComparingAnaly
         }
         //new code
         for (Dependency child : dependency2.getRelatedDependencies()) {
-            if (hasSameBasePath(dependency1, child)) {
+            if (hasSameBasePath(child, dependency1)) {
                 return true;
             }
         }
@@ -354,13 +356,23 @@ public class DependencyBundlingAnalyzer extends AbstractDependencyComparingAnaly
         final String rightName = right.getFileName().toLowerCase();
 
         final boolean returnVal;
-        if (!rightName.matches(".*\\.(tar|tgz|gz|zip|ear|war).+") && leftName.matches(".*\\.(tar|tgz|gz|zip|ear|war).+")
+        //TODO - should we get rid of this merging? It removes a true BOM...
+
+        if (left.isVirtual() && !right.isVirtual()) {
+            returnVal = true;
+        } else if (!left.isVirtual() && right.isVirtual()) {
+            returnVal = false;
+        } else if (!rightName.matches(".*\\.(tar|tgz|gz|zip|ear|war).+") && leftName.matches(".*\\.(tar|tgz|gz|zip|ear|war).+")
                 || rightName.contains("core") && !leftName.contains("core")
-                || rightName.contains("kernel") && !leftName.contains("kernel")) {
+                || rightName.contains("kernel") && !leftName.contains("kernel")
+                || rightName.contains("akka-stream") && !leftName.contains("akka-stream")
+                || rightName.contains("netty-transport") && !leftName.contains("netty-transport")) {
             returnVal = false;
         } else if (rightName.matches(".*\\.(tar|tgz|gz|zip|ear|war).+") && !leftName.matches(".*\\.(tar|tgz|gz|zip|ear|war).+")
                 || !rightName.contains("core") && leftName.contains("core")
-                || !rightName.contains("kernel") && leftName.contains("kernel")) {
+                || !rightName.contains("kernel") && leftName.contains("kernel")
+                || !rightName.contains("akka-stream") && leftName.contains("akka-stream")
+                || !rightName.contains("netty-transport") && leftName.contains("netty-transport")) {
             returnVal = true;
         } else {
             /*
@@ -403,9 +415,11 @@ public class DependencyBundlingAnalyzer extends AbstractDependencyComparingAnaly
      * @return true if on of the dependencies is a pom.xml and the identifiers
      * between the two collections match; otherwise false
      */
-    private boolean isShadedJar(Dependency dependency, Dependency nextDependency) {
+    protected boolean isShadedJar(Dependency dependency, Dependency nextDependency) {
         if (dependency == null || dependency.getFileName() == null
-                || nextDependency == null || nextDependency.getFileName() == null) {
+                || nextDependency == null || nextDependency.getFileName() == null
+                || dependency.getIdentifiers().isEmpty()
+                || nextDependency.getIdentifiers().isEmpty()) {
             return false;
         }
         final String mainName = dependency.getFileName().toLowerCase();

@@ -193,6 +193,17 @@ public class Dependency extends EvidenceCollection implements Serializable {
     }
 
     /**
+     * Constructs a new Dependency object.
+     *
+     * @param isVirtual specifies if the dependency is virtual indicating the
+     * file doesn't actually exist.
+     */
+    public Dependency(boolean isVirtual) {
+        this();
+        this.isVirtual = isVirtual;
+    }
+
+    /**
      * Returns the file name of the dependency.
      *
      * @return the file name of the dependency
@@ -405,8 +416,8 @@ public class Dependency extends EvidenceCollection implements Serializable {
         if (mavenArtifact.getVersion() != null && !mavenArtifact.getVersion().isEmpty()) {
             this.addEvidence(EvidenceType.VERSION, source, "version", mavenArtifact.getVersion(), confidence);
         }
+        boolean found = false;
         if (mavenArtifact.getArtifactUrl() != null && !mavenArtifact.getArtifactUrl().isEmpty()) {
-            boolean found = false;
             synchronized (this) {
                 for (Identifier i : this.identifiers) {
                     if ("maven".equals(i.getType()) && i.getValue().equals(mavenArtifact.toString())) {
@@ -420,10 +431,10 @@ public class Dependency extends EvidenceCollection implements Serializable {
                     }
                 }
             }
-            if (!found) {
-                LOGGER.debug("Adding new maven identifier {}", mavenArtifact);
-                this.addIdentifier("maven", mavenArtifact.toString(), mavenArtifact.getArtifactUrl(), Confidence.HIGHEST);
-            }
+        }
+        if (!found && mavenArtifact.getGroupId() != null && mavenArtifact.getArtifactId() != null && mavenArtifact.getVersion() != null) {
+            LOGGER.debug("Adding new maven identifier {}", mavenArtifact);
+            this.addIdentifier("maven", mavenArtifact.toString(), mavenArtifact.getArtifactUrl(), Confidence.HIGHEST);
         }
     }
 

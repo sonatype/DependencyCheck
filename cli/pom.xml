@@ -20,7 +20,7 @@ Copyright (c) 2012 - Jeremy Long. All Rights Reserved.
     <parent>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-parent</artifactId>
-        <version>3.1.2</version>
+        <version>3.2.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>dependency-check-cli</artifactId>
@@ -28,6 +28,12 @@ Copyright (c) 2012 - Jeremy Long. All Rights Reserved.
 
     <name>Dependency-Check Command Line</name>
     <description>dependency-check-cli is an command line tool that uses dependency-check-core to detect publicly disclosed vulnerabilities associated with the scanned project dependencies. The tool will generate a report listing the dependency, any identified Common Platform Enumeration (CPE) identifiers, and the associated Common Vulnerability and Exposure (CVE) entries.</description>
+    <scm>
+        <connection>scm:git:https://github.com/jeremylong/DependencyCheck.git</connection>
+        <url>https://github.com/jeremylong/DependencyCheck/cli</url>
+        <developerConnection>scm:git:git@github.com:jeremylong/DependencyCheck.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
     <build>
         <finalName>dependency-check-${project.version}</finalName>
         <resources>
@@ -91,7 +97,7 @@ Copyright (c) 2012 - Jeremy Long. All Rights Reserved.
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <attach>false</attach> <!-- don't install/deploy this archive -->
+                    <attach>true</attach>
                 </configuration>
                 <executions>
                     <execution>
@@ -148,4 +154,75 @@ Copyright (c) 2012 - Jeremy Long. All Rights Reserved.
             </exclusions>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>Docker</id>
+            <activation>
+                <property>
+                    <name>docker</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!--
+                    See https://github.com/spotify/dockerfile-maven/issues/10#issuecomment-331697440
+                    mvn dockerfile:build
+                    mvn dockerfile:tag@tag-version
+                    mvn dockerfile:push@push-latest
+                    mvn dockerfile:push@push-version
+                    -->
+                    <plugin>
+                        <groupId>com.spotify</groupId>
+                        <artifactId>dockerfile-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build-and-tag-latest</id>
+                                <phase>none</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>tag-version</id>
+                                <phase>none</phase>
+                                <goals>
+                                    <goal>tag</goal>
+                                </goals>
+                                <configuration>
+                                    <tag>${project.version}</tag>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>push-latest</id>
+                                <phase>none</phase>
+                                <goals>
+                                    <goal>push</goal>
+                                </goals>
+                                <configuration>
+                                    <tag>latest</tag>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>push-version</id>
+                                <phase>none</phase>
+                                <goals>
+                                    <goal>push</goal>
+                                </goals>
+                                <configuration>
+                                    <tag>${project.version}</tag>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <repository>owasp/dependency-check</repository>
+                            <tag>${project.version}</tag>
+                            <buildArgs>
+                                <VERSION>${project.version}</VERSION>
+                            </buildArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

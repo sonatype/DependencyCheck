@@ -2,6 +2,54 @@
 
 Please see the [dependency-check google group](https://groups.google.com/forum/#!forum/dependency-check) for the release notes on versions not listed below.
 
+## [Version 3.2.1](https://github.com/jeremylong/DependencyCheck/releases/tag/v3.2.1) (2018-05-28)
+
+### Bug Fixes
+
+- In some cases when using the Maven or Gradle plugins the GAV coordinates were not being added as an Identifier causing suppression rules to fail; this has been resolved (#1298)
+- Documentation Update (SCM links in the maven site were broken) (#1297)
+- False positive reduction (#1290)
+- Enhanced logging output for TLS failures to better assist with debugging (#1269)
+- Resolved a Null Pointer Exception (#1296)
+
+## [Version 3.2.0](https://github.com/jeremylong/DependencyCheck/releases/tag/v3.2.0) (2018-05-21)
+
+### Security Fix
+
+- Unsafe unzip operations ([zip slip](https://github.com/snyk/zip-slip-vulnerability)), as reported by the Snyk Security Research Team, have been corrected. CVE-2018-12036 allows attackers to write to arbitrary files via a crafted archive that holds directory traversal filenames.
+
+### Bug Fixes
+
+- The dependency-check-maven plugin no longer uses the [Central Analyzer](https://jeremylong.github.io/DependencyCheck/analyzers/central-analyzer.html) by default
+- Updated dependency-check-maven so that it will not fail when your multi-module build has dependencies that have not yet been built in the reactor (See [#740](https://github.com/jeremylong/DependencyCheck/issues/740))
+  - Note if the required dependency has not yet been built in the reactor and the dependency is available in a configured repository dependency-check-maven, as expected, would pull the dependency from the repository for analysis. 
+- Minor documentation updates
+- False positive reduction
+- Fixed the Gradle Plugin and Ant Task so that the temp directory is properly cleaned up after execution
+- Removed TLSv1 from the list of protocols used by default (See [#1237](https://github.com/jeremylong/DependencyCheck/pull/1237))
+
+### Enhancements
+
+- Excess white space has been removed from the XML and HTML reports; the JSON report is still pretty printed (a future release will convert this to a configurable option)
+- Better error reporting
+- Changed to use commons-text instead of commons-lang3 as a portion of commons-lang3 was moved to commonts-text
+- Added more flexible suppression rules with the introduction of the `until` attribute (see [#1145](https://github.com/jeremylong/DependencyCheck/issues/1145) and [dependency-suppression.1.2.xsd](https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.2.xsd)
+
+## [Version 3.1.2](https://github.com/jeremylong/DependencyCheck/releases/tag/v3.1.2) (2018-04-02)
+
+### Bug fixes
+
+- Updated the NVD URLs
+- Updated documentation
+- Add project references to the JSON and XML report; in aggregate scans using Maven or Gradle the dependencies
+  will include a reference to the project/module where they were found
+- The configuration option `versionCheckEnabled` was added to Maven to allow users to disable the check for
+  new versions of dependency-check; this will be added to gradle plugin, Ant Task, and the CLI in a future release
+- The XML and JSON reports were fixed so that the correct version number is displayed see [issue #1109](https://github.com/jeremylong/DependencyCheck/issues/1109)
+- The initial database creation time for H2 databases was improved
+- Changes made to decrease false positive and false negatives
+
+
 ## [Version 3.1.1](https://github.com/jeremylong/DependencyCheck/releases/tag/v3.1.1) (2018-01-29)
 
 ### Bug fixes

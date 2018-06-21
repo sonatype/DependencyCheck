@@ -20,7 +20,7 @@ Copyright (c) 2013 - Jeremy Long. All Rights Reserved.
     <parent>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-parent</artifactId>
-        <version>3.1.2</version>
+        <version>3.2.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>dependency-check-ant</artifactId>
@@ -28,6 +28,12 @@ Copyright (c) 2013 - Jeremy Long. All Rights Reserved.
 
     <name>Dependency-Check Ant Task</name>
     <description>dependency-check-ant is an Ant Task that uses dependency-check-core to detect publicly disclosed vulnerabilities associated with the project's dependencies. The task will generate a report listing the dependency, any identified Common Platform Enumeration (CPE) identifiers, and the associated Common Vulnerability and Exposure (CVE) entries.</description>
+    <scm>
+        <connection>scm:git:https://github.com/jeremylong/DependencyCheck.git</connection>
+        <url>https://github.com/jeremylong/DependencyCheck/ant</url>
+        <developerConnection>scm:git:git@github.com:jeremylong/DependencyCheck.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
     <build>
         <resources>
             <resource>
@@ -197,7 +203,7 @@ Copyright (c) 2013 - Jeremy Long. All Rights Reserved.
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <attach>false</attach> <!-- don't install/deploy this archive -->
+                    <attach>true</attach>
                 </configuration>
                 <executions>
                     <execution>

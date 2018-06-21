@@ -1,5 +1,5 @@
 /*
- * This file is part of dependency-check-cli.
+ * This file is part of dependency-check-core.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Copyright (c) 2014 Jeremy Long. All Rights Reserved.
+ * Copyright (c) 2018 Jeremy Long. All Rights Reserved.
  */
-package org.owasp.dependencycheck;
+package org.owasp.dependencycheck.analyzer.exception;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Thrown if an invalid path is encountered.
+ * An exception thrown when an online searching fails (such as NSP).
  *
  * @author Jeremy Long
  */
-public class InvalidScanPathException extends Exception {
+@ThreadSafe
+public class SearchException extends AnalysisException {
 
     /**
      * The serial version UID for serialization.
@@ -30,37 +33,37 @@ public class InvalidScanPathException extends Exception {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Creates a new InvalidScanPathException.
+     * Creates a new SearchException.
      */
-    public InvalidScanPathException() {
+    public SearchException() {
         super();
     }
 
     /**
-     * Creates a new InvalidScanPathException.
+     * Creates a new SearchException.
      *
-     * @param msg a message for the exception
+     * @param msg a message for the exception.
      */
-    public InvalidScanPathException(String msg) {
+    public SearchException(String msg) {
         super(msg);
     }
 
     /**
-     * Creates a new InvalidScanPathException.
+     * Creates a new SearchException.
      *
-     * @param ex the cause of the exception
+     * @param ex the cause of the failure.
      */
-    public InvalidScanPathException(Throwable ex) {
+    public SearchException(Throwable ex) {
         super(ex);
     }
 
     /**
-     * Creates a new InvalidScanPathException.
+     * Creates a new SearchException.
      *
-     * @param msg a message for the exception
-     * @param ex the cause of the exception
+     * @param msg a message for the exception.
+     * @param ex the cause of the failure.
      */
-    public InvalidScanPathException(String msg, Throwable ex) {
+    public SearchException(String msg, Throwable ex) {
         super(msg, ex);
     }
 }

@@ -720,6 +720,13 @@ public class Engine implements FileFilter, AutoCloseable {
                         + "data instead. Results may not include recent vulnerabilities.");
                 LOGGER.debug("Update Error", ex);
             } catch (DatabaseException ex) {
+                final String msg;
+                if (ex.getMessage().contains("Unable to connect") && ConnectionFactory.isH2Connection(settings)) {
+                    msg = "Unable to update connect to the database - if this error persists it may be "
+                            + "due to a corrupt database. Consider running `purge` to delete the existing database";
+                } else {
+                    msg = "Unable to connect to the database";
+                }
                 throw new ExceptionCollection("Unable to connect to the database", ex);
             }
         } else {
@@ -857,8 +864,9 @@ public class Engine implements FileFilter, AutoCloseable {
      * them.
      *
      * @throws UpdateException thrown if the operation fails
+     * @throws DatabaseException if the operation fails due to a local database failure
      */
-    public void doUpdates() throws UpdateException {
+    public void doUpdates() throws UpdateException, DatabaseException {
         doUpdates(false);
     }
 
@@ -869,8 +877,9 @@ public class Engine implements FileFilter, AutoCloseable {
      * @param remainOpen whether or not the database connection should remain
      * open
      * @throws UpdateException thrown if the operation fails
+     * @throws DatabaseException if the operation fails due to a local database failure
      */
-    public void doUpdates(boolean remainOpen) throws UpdateException {
+    public void doUpdates(boolean remainOpen) throws UpdateException, DatabaseException {
         if (mode.isDatabaseRequired()) {
             H2DBLock dblock = null;
             try {
@@ -894,8 +903,6 @@ public class Engine implements FileFilter, AutoCloseable {
                 if (remainOpen) {
                     openDatabase(true, false);
                 }
-            } catch (DatabaseException ex) {
-                throw new UpdateException(ex.getMessage(), ex.getCause());
             } catch (H2DBLockException ex) {
                 throw new UpdateException("Unable to obtain an exclusive lock on the H2 database to perform updates", ex);
             } finally {
