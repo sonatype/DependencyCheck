@@ -32,6 +32,8 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
 
     public static final String IDENTIFIER_TYPE = "ossindex";
 
+    private List<PackageDetector> detectors;
+
     @Override
     public String getName() {
         return "Sonatype OSS Index Analyzer: Identification";
@@ -46,8 +48,6 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
     protected String getAnalyzerEnabledSettingKey() {
         return Settings.KEYS.ANALYZER_OSSINDEX_ENABLED;
     }
-
-    private List<PackageDetector> detectors;
 
     @Override
     protected void prepareAnalyzer(final Engine engine) throws InitializationException {
