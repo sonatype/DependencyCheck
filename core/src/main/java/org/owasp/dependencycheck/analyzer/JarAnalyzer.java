@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -395,7 +396,28 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
                     newDependency.setActualFilePath(pomFile.getAbsolutePath());
                     newDependency.setFileName(displayName);
                     newDependency.setFilePath(displayPath);
+                    newDependency.setEcosystem(DEPENDENCY_ECOSYSTEM);
+                    String groupId = pom.getGroupId();
+                    String version = pom.getVersion();
+                    if (groupId == null) {
+                        groupId = pom.getParentGroupId();
+                    }
+                    if (version == null) {
+                        version = pom.getParentVersion();
+                    }
+                    if (groupId == null) {
+                        newDependency.setName(pom.getArtifactId());
+                        newDependency.setPackagePath(String.format("%s:%s", pom.getArtifactId(), version));
+                    } else {
+                        newDependency.setName(String.format("%s:%s", groupId, pom.getArtifactId()));
+                        newDependency.setPackagePath(String.format("%s:%s:%s", groupId, pom.getArtifactId(), version));
+                    }
+                    newDependency.setDisplayFileName(String.format("%s (shaded: %s)", dependency.getDisplayFileName(), newDependency.getPackagePath()));
+                    newDependency.setVersion(version);
                     setPomEvidence(newDependency, pom, null);
+                    if (dependency.getProjectReferences().size() > 0) {
+                        newDependency.addAllProjectReferences(dependency.getProjectReferences());
+                    }
                     engine.addDependency(newDependency);
                 } catch (AnalysisException ex) {
                     LOGGER.warn("An error occurred while analyzing '{}'.", dependency.getActualFilePath());
@@ -422,7 +444,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
         final String propPath = path.substring(0, path.length() - 7) + "pom.properies";
         final ZipEntry propEntry = jar.getEntry(propPath);
         if (propEntry != null) {
-            try (Reader reader = new InputStreamReader(jar.getInputStream(propEntry), "UTF-8")) {
+            try (Reader reader = new InputStreamReader(jar.getInputStream(propEntry), StandardCharsets.UTF_8)) {
                 pomProperties = new Properties();
                 pomProperties.load(reader);
                 LOGGER.debug("Read pom.properties: {}", propPath);
@@ -696,6 +718,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
      * @return whether evidence was identified parsing the manifest
      * @throws IOException if there is an issue reading the JAR file
      */
+    //CSOFF: MethodLength
     protected boolean parseManifest(Dependency dependency, List<ClassNameInformation> classInformation)
             throws IOException {
         boolean foundSomething = false;
@@ -706,8 +729,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
                         && !dependency.getFileName().toLowerCase().endsWith("-javadoc.jar")
                         && !dependency.getFileName().toLowerCase().endsWith("-src.jar")
                         && !dependency.getFileName().toLowerCase().endsWith("-doc.jar")) {
-                    LOGGER.debug("Jar file '{}' does not contain a manifest.",
-                            dependency.getFileName());
+                    LOGGER.debug("Jar file '{}' does not contain a manifest.", dependency.getFileName());
                 }
                 return false;
             }
@@ -763,7 +785,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
                     //noinspection UnnecessaryContinue
                     continue;
                     //skipping main class as if this has important information to add it will be added during class name analysis...
-                } else if (key.equalsIgnoreCase("implementation-url")
+                } else if ("implementation-url".equalsIgnoreCase(key)
                         && value != null
                         && value.startsWith("https://projects.spring.io/spring-boot/#/spring-boot-starter-parent/parent/")) {
                     continue;
@@ -866,6 +888,7 @@ public class JarAnalyzer extends AbstractFileTypeAnalyzer {
         }
         return foundSomething;
     }
+    //CSON: MethodLength
 
     /**
      * Adds a description to the given dependency. If the description contains

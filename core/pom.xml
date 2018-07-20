@@ -20,7 +20,7 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
     <parent>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-parent</artifactId>
-        <version>3.2.2-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>dependency-check-core</artifactId>
@@ -238,8 +238,24 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
             <groupId>org.sonatype.ossindex</groupId>
             <artifactId>ossindex-service-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.h3xstream.retirejs</groupId>
+            <artifactId>retirejs-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- The following dependencies are only used during testing 
              and must not be converted to a properties based version number -->
+        <dependency>
+            <groupId>org.jslipc</groupId>
+            <artifactId>jslipc</artifactId>
+            <version>0.2.0</version>
+            <scope>test</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.apache.maven.scm</groupId>
             <artifactId>maven-scm-provider-cvsexe</artifactId>
@@ -369,6 +385,7 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
+
     </dependencies>
     <profiles>
         <profile>
@@ -425,7 +442,7 @@ Copyright (c) 2012 Jeremy Long. All Rights Reserved.
                 <dependency>
                     <groupId>org.postgresql</groupId>
                     <artifactId>postgresql</artifactId>
-                    <version>42.2.2</version>
+                    <version>42.2.4</version>
                 </dependency>
             </dependencies>
             <build>

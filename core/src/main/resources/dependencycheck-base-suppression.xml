@@ -73,8 +73,9 @@
             17. restful_web_services_project:restful_web_services is a drupal plugin (#1077)
             18. font_project is a php library (#1166)
             19. amazon_aws_project is a drupal utility (#1290)
+            20. google android should not be flagged for the base library
         ]]></notes>
-        <filePath regex="true">.*(\.(dll|jar|ear|war|pom|nupkg|nuspec)|pom\.xml|package.json)$</filePath>
+        <filePath regex="true">.*(\.(dll|jar|ear|war|pom|nupkg|nuspec|aar)|pom\.xml|package.json)$</filePath>
         <cpe>cpe:/a:sandbox:sandbox</cpe>
         <cpe>cpe:/a:openmedia:openmedia</cpe>        
         <cpe>cpe:/a:file_project:file</cpe>
@@ -98,6 +99,7 @@
         <cpe>cpe:/a:php:php</cpe>
         <cpe>cpe:/a:font_project:font</cpe>
         <cpe>cpe:/a:amazon_aws_project:amazon_aws</cpe>
+        <cpe>cpe:/a:google:android</cpe>
     </suppress>
     <suppress base="true">
         <notes><![CDATA[
@@ -111,6 +113,7 @@
             5. snmp (#1248)
             6. python (#1055)
             7. python (#1055)
+            8. CVE-2017-16046 is for the node.js npm mariadb client (#1364)
         ]]></notes>
         <filePath regex="true">.*(\.(jar|ear|war|pom)|pom\.xml)$</filePath>
         <cpe>cpe:/a:dash:dash</cpe>
@@ -122,6 +125,7 @@
         <cpe>cpe:/a:net-snmp:net-snmp</cpe>
         <cpe>cpe:/a:python:python</cpe>
         <cpe>cpe:/a:python_software_foundation:python</cpe>
+        <cve>CVE-2017-16046</cve>
     </suppress>
     <suppress base="true">
         <notes><![CDATA[
@@ -161,6 +165,13 @@
         <gav regex="true">^com\.github\.danielwegener:logback-kafka-appender:.*$</gav>
         <cpe>cpe:/a:logback:logback</cpe>
     </suppress>
+    <suppress base="true">
+        <notes><![CDATA[
+        httpmime is not the same as th actual http client; suppressing this match.
+        ]]></notes>
+        <gav regex="true">^org\.apache\.httpcomponents:httpmime:.*$</gav>
+        <cpe>cpe:/a:apache:httpclient</cpe>
+     </suppress>
     <suppress base="true">
         <notes><![CDATA[
         FP per #1027
@@ -597,6 +608,13 @@
     </suppress>
     <suppress base="true">
         <notes><![CDATA[
+        FP per #1344
+        ]]></notes>
+        <gav regex="true">^com\.github\.docker-java:docker-java:.*$</gav>
+        <cve>CVE-2017-7297</cve>
+     </suppress>
+    <suppress base="true">
+        <notes><![CDATA[
             These CVE only affects jackson-dataformat-xml. See issue #517.
         ]]></notes>
         <gav regex="true">com\.fasterxml\.jackson\.dataformat:jackson(?!\-dataformat\-xml).*</gav>
@@ -776,7 +794,7 @@
         False positive per issue #851 and #1073
         ]]></notes>
         <gav regex="true">^com\.ibm\.icu:icu4j:.*$</gav>
-        <cpe>cpe:/a:icu[_-]project:international[_-]components[_-]for[_-]unicode</cpe>
+        <cpe regex="true">cpe:/a:icu[_-]project:international[_-]components[_-]for[_-]unicode:.*</cpe>
     </suppress>
     <suppress base="true">
         <notes><![CDATA[
@@ -1833,6 +1851,7 @@
             suppress specific CVE that are for the server
         ]]></notes>
         <gav regex="true">^(org\.)?postgresql:postgresql:.*$</gav>
+        <cve>CVE-2018-1115</cve>
         <cve>CVE-2017-14798</cve>
         <cve>CVE-2017-8806</cve>
         <cve>CVE-2006-5540</cve>

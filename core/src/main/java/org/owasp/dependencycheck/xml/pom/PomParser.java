@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -84,9 +85,9 @@ public class PomParser {
             final XMLReader xmlReader = saxParser.getXMLReader();
             xmlReader.setContentHandler(handler);
 
-            final BOMInputStream bomStream = new BOMInputStream(new XmlInputStream(inputStream));
+            final BOMInputStream bomStream = new BOMInputStream(new XmlInputStream(new PomProjectInputStream(inputStream)));
             final ByteOrderMark bom = bomStream.getBOM();
-            final String defaultEncoding = "UTF-8";
+            final String defaultEncoding = StandardCharsets.UTF_8.name();
             final String charsetName = bom == null ? defaultEncoding : bom.getCharsetName();
             final Reader reader = new InputStreamReader(bomStream, charsetName);
             final InputSource in = new InputSource(reader);

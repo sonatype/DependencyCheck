@@ -33,6 +33,7 @@ import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.utils.FileFilterBuilder;
 import org.owasp.dependencycheck.utils.Settings;
+import org.owasp.dependencycheck.utils.Checksum;
 
 /**
  * This analyzer is used to analyze SWIFT and Objective-C packages by collecting
@@ -70,9 +71,13 @@ public class CocoaPodsAnalyzer extends AbstractFileTypeAnalyzer {
      */
     public static final String PODSPEC = "podspec";
     /**
-     * Filter that detects files named "*.podspec".
+     * The file name to scan.
      */
-    private static final FileFilter PODSPEC_FILTER = FileFilterBuilder.newInstance().addExtensions(PODSPEC).build();
+    public static final String PODFILE_LOCK = "Podfile.lock";
+    /**
+     * Filter that detects files named "*.podspec" and "Podfile.lock".
+     */
+    private static final FileFilter PODS_FILTER = FileFilterBuilder.newInstance().addExtensions(PODSPEC).addFilenames(PODFILE_LOCK).build();
 
     /**
      * The capture group #1 is the block variable. e.g. "Pod::Spec.new do
@@ -81,13 +86,18 @@ public class CocoaPodsAnalyzer extends AbstractFileTypeAnalyzer {
     private static final Pattern PODSPEC_BLOCK_PATTERN = Pattern.compile("Pod::Spec\\.new\\s+?do\\s+?\\|(.+?)\\|");
 
     /**
+     * The capture group #1 is the dependency name, #2 is dependency version
+     */
+    private static final Pattern PODFILE_LOCK_DEPENDENCY_PATTERN = Pattern.compile("  - \"?(.*) \\((\\d+\\.\\d+\\.\\d+)\\)\"?");
+
+    /**
      * Returns the FileFilter
      *
      * @return the FileFilter
      */
     @Override
     protected FileFilter getFileFilter() {
-        return PODSPEC_FILTER;
+        return PODS_FILTER;
     }
 
     @Override
@@ -129,7 +139,66 @@ public class CocoaPodsAnalyzer extends AbstractFileTypeAnalyzer {
     @Override
     protected void analyzeDependency(Dependency dependency, Engine engine)
             throws AnalysisException {
+        if (PODFILE_LOCK.equals(dependency.getFileName())) {
+            analyzePodfileLockDependencies(dependency, engine);
+        }
 
+        if (dependency.getFileName().endsWith(PODSPEC)) {
+            analyzePodspecDependency(dependency);
+        }
+    }
+
+    /**
+     * Analyzes the podfile.lock file to extract evidence for the dependency.
+     *
+     * @param podfileLock the dependency to analyze
+     * @param engine the analysis engine
+     * @throws AnalysisException thrown if there is an error analyzing the
+     * dependency
+     */
+    private void analyzePodfileLockDependencies(Dependency podfileLock, Engine engine)
+            throws AnalysisException {
+        engine.removeDependency(podfileLock);
+
+        final String contents;
+        try {
+            contents = FileUtils.readFileToString(podfileLock.getActualFile(), Charset.defaultCharset());
+        } catch (IOException e) {
+            throw new AnalysisException(
+                    "Problem occurred while reading dependency file.", e);
+        }
+
+        final Matcher matcher = PODFILE_LOCK_DEPENDENCY_PATTERN.matcher(contents);
+        while (matcher.find()) {
+            final String name = matcher.group(1);
+            final String version = matcher.group(2);
+
+            final Dependency dependency = new Dependency(podfileLock.getActualFile(), true);
+            dependency.setEcosystem(DEPENDENCY_ECOSYSTEM);
+            dependency.setName(name);
+            dependency.setVersion(version);
+            final String packagePath = String.format("%s:%s", name, version);
+            dependency.setPackagePath(packagePath);
+            dependency.setDisplayFileName(packagePath);
+            dependency.setSha1sum(Checksum.getSHA1Checksum(packagePath));
+            dependency.setSha256sum(Checksum.getSHA256Checksum(packagePath));
+            dependency.setMd5sum(Checksum.getMD5Checksum(packagePath));
+            dependency.addEvidence(EvidenceType.VENDOR, PODFILE_LOCK, "name", name, Confidence.HIGHEST);
+            dependency.addEvidence(EvidenceType.PRODUCT, PODFILE_LOCK, "name", name, Confidence.HIGHEST);
+            dependency.addEvidence(EvidenceType.VERSION, PODFILE_LOCK, "version", version, Confidence.HIGHEST);
+            engine.addDependency(dependency);
+        }
+    }
+
+    /**
+     * Analyzes the podspec and adds the evidence to the dependency.
+     *
+     * @param dependency the dependency
+     * @throws AnalysisException thrown if there is an error analyzing the
+     * podspec
+     */
+    private void analyzePodspecDependency(Dependency dependency)
+            throws AnalysisException {
         dependency.setEcosystem(DEPENDENCY_ECOSYSTEM);
         String contents;
         try {
@@ -173,7 +242,11 @@ public class CocoaPodsAnalyzer extends AbstractFileTypeAnalyzer {
                 dependency.setVersion(version);
             }
         }
-
+        if (dependency.getVersion() != null && !dependency.getVersion().isEmpty()) {
+            dependency.setDisplayFileName(String.format("%s:%s", dependency.getName(), dependency.getVersion()));
+        } else {
+            dependency.setDisplayFileName(dependency.getName());
+        }
         setPackagePath(dependency);
     }
 

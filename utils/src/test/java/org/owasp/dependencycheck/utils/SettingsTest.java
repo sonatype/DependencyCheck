@@ -20,11 +20,14 @@ package org.owasp.dependencycheck.utils;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,6 +62,7 @@ public class SettingsTest extends BaseTest {
 
     /**
      * Test of mergeProperties method, of class Settings.
+     *
      * @throws java.io.IOException thrown when the test fails
      * @throws java.net.URISyntaxException thrown when the test fails
      */
@@ -295,34 +299,21 @@ public class SettingsTest extends BaseTest {
     }
 
     /**
-     * Assert {@link Settings#setArrayIfNotEmpty(String, String[])} with
-     * multiple values sets a delimited string.
+     * Assert {@link Settings#setArrayIfNotEmpty(String, List<String>)}
+     * correctly stores the list as an array.
      */
     @Test
-    public void testSetArrayNotEmptySetsADelimitedString() {
-        // GIVEN an array with values
-        final String[] array = {"value1", "value2"};
+    public void testSetArrayNotEmptyWithList() {
+        // GIVEN a null array
+        final List<String> list = new ArrayList<>();
+        list.add("one");
+        list.add("two");
 
         // WHEN setting the array
-        getSettings().setArrayIfNotEmpty("key", array);
+        getSettings().setArrayIfNotEmpty("key", list);
 
-        // THEN the property is set
-        assertThat("Expected the property to be set", getSettings().getString("key"), is("value1,value2"));
-    }
-
-    /**
-     * Assert {@link Settings#setArrayIfNotEmpty(String, String[])} with a
-     * single values sets a string.
-     */
-    @Test
-    public void testSetArrayNotEmptyWithSingleValueSetsAString() {
-        // GIVEN an array with a value
-        final String[] array = {"value1"};
-
-        // WHEN setting the array
-        getSettings().setArrayIfNotEmpty("key", array);
-
-        // THEN the property is set
-        assertThat("Expected the property to be set", getSettings().getString("key"), is("value1"));
+        // THEN the property was not set
+        assertThat("Expected the property to not be set", getSettings().getArray("key"),
+                equalTo(new String[]{"one", "two"}));
     }
 }

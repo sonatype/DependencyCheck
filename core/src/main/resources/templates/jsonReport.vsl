@@ -20,7 +20,8 @@
         "credits": {
             "NVD": "This report contains data retrieved from the National Vulnerability Database: http://nvd.nist.gov",
             "NSP": "This report may contain data retrieved from the Node Security Platform: https://nodesecurity.io",
-            "OSSINDEX": "This report may contain data retrieved from the Sonatype OSS Index: https://ossindex.sonatype.org"
+            "OSSINDEX": "This report may contain data retrieved from the Sonatype OSS Index: https://ossindex.sonatype.org",
+            "RETIREJS": "This report may contain data retrieved from the RetireJS community: https://retirejs.github.io/retire.js/"
         }
     },
     "dependencies": [
@@ -29,7 +30,8 @@
             "fileName": "$enc.json($dependency.DisplayFileName)",
             "filePath": "$enc.json($dependency.FilePath)"
             #if(!$dependency.isVirtual()),"md5": "$enc.json($dependency.Md5sum)",
-            "sha1": "$enc.json($dependency.Sha1sum)"#end
+            "sha1": "$enc.json($dependency.Sha1sum)",
+            "sha256": "$enc.json($dependency.Sha256sum)"#end
             #if($dependency.description),"description": "$enc.json($dependency.description)"#end
             #if($dependency.license),"license": "$enc.json($dependency.license)"#end
             #if ($dependency.projectReferences.size()>0)
@@ -47,7 +49,8 @@
                 #foreach($related in $dependency.getRelatedDependencies()) #if($foreach.count > 1),#end {
                     "isVirtual": #if($dependency.isVirtual())true#{else}false#end,
                     "filePath": "$enc.json($related.FilePath)"
-                    #if(!$related.isVirtual()),"sha1": "$enc.json($related.Sha1sum)",
+                    #if(!$related.isVirtual()),"sha256": "$enc.json($related.Sha256sum)",
+                    "sha1": "$enc.json($related.Sha1sum)",
                     "md5": "$enc.json($related.Md5sum)"#end#if($related.getIdentifiers()),
                     "identifiers": [
                         #set($loopCount=0)

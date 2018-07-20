@@ -259,7 +259,7 @@ public final class CliParser {
                 .build();
 
         final Option excludes = Option.builder().argName("pattern").hasArg().longOpt(ARGUMENT.EXCLUDE)
-                .desc("Specify and exclusion pattern. This option can be specified multiple times"
+                .desc("Specify an exclusion pattern. This option can be specified multiple times"
                         + " and it accepts Ant style exclusions.")
                 .build();
 
@@ -302,7 +302,7 @@ public final class CliParser {
                 .build();
 
         final Option retiredEnabled = Option.builder().longOpt(ARGUMENT.RETIRED)
-                .desc("Enables the experimental analyzers.")
+                .desc("Enables the retired analyzers.")
                 .build();
 
         final Option failOnCVSS = Option.builder().argName("score").hasArg().longOpt(ARGUMENT.FAIL_ON_CVSS)
@@ -346,130 +346,100 @@ public final class CliParser {
      */
     @SuppressWarnings("static-access")
     private void addAdvancedOptions(final Options options) {
-
         final Option cve12Base = Option.builder().argName("url").hasArg().longOpt(ARGUMENT.CVE_BASE_12)
                 .desc("Base URL for each year’s CVE 1.2, the %d will be replaced with the year. ")
                 .build();
-
         final Option cve20Base = Option.builder().argName("url").hasArg().longOpt(ARGUMENT.CVE_BASE_20)
                 .desc("Base URL for each year’s CVE 2.0, the %d will be replaced with the year.")
                 .build();
-
         final Option cve12Modified = Option.builder().argName("url").hasArg().longOpt(ARGUMENT.CVE_MOD_12)
                 .desc("URL for the modified CVE 1.2.")
                 .build();
-
         final Option cve20Modified = Option.builder().argName("url").hasArg().longOpt(ARGUMENT.CVE_MOD_20)
                 .desc("URL for the modified CVE 2.0.")
                 .build();
-
         final Option updateOnly = Option.builder().longOpt(ARGUMENT.UPDATE_ONLY)
                 .desc("Only update the local NVD data cache; no scan will be executed.").build();
-
         final Option data = Option.builder(ARGUMENT.DATA_DIRECTORY_SHORT).argName("path").hasArg().longOpt(ARGUMENT.DATA_DIRECTORY)
                 .desc("The location of the H2 Database file. This option should generally not be set.")
                 .build();
-
         final Option nexusUrl = Option.builder().argName("url").hasArg().longOpt(ARGUMENT.NEXUS_URL)
                 .desc("The url to the Nexus Server's REST API Endpoint (http://domain/nexus/service/local). "
                         + "If not set the Nexus Analyzer will be disabled.").build();
-
         final Option nexusUsesProxy = Option.builder().argName("true/false").hasArg().longOpt(ARGUMENT.NEXUS_USES_PROXY)
                 .desc("Whether or not the configured proxy should be used when connecting to Nexus.")
                 .build();
-
         final Option additionalZipExtensions = Option.builder().argName("extensions").hasArg()
                 .longOpt(ARGUMENT.ADDITIONAL_ZIP_EXTENSIONS)
                 .desc("A comma separated list of additional extensions to be scanned as ZIP files "
                         + "(ZIP, EAR, WAR are already treated as zip files)").build();
-
         final Option pathToMono = Option.builder().argName("path").hasArg().longOpt(ARGUMENT.PATH_TO_MONO)
                 .desc("The path to Mono for .NET Assembly analysis on non-windows systems.")
                 .build();
-
         final Option pathToBundleAudit = Option.builder().argName("path").hasArg()
                 .longOpt(ARGUMENT.PATH_TO_BUNDLE_AUDIT)
                 .desc("The path to bundle-audit for Gem bundle analysis.").build();
-
         final Option connectionTimeout = Option.builder(ARGUMENT.CONNECTION_TIMEOUT_SHORT).argName("timeout").hasArg()
                 .longOpt(ARGUMENT.CONNECTION_TIMEOUT).desc("The connection timeout (in milliseconds) to use when downloading resources.")
                 .build();
-
         final Option proxyServer = Option.builder().argName("server").hasArg().longOpt(ARGUMENT.PROXY_SERVER)
                 .desc("The proxy server to use when downloading resources.").build();
-
         final Option proxyPort = Option.builder().argName("port").hasArg().longOpt(ARGUMENT.PROXY_PORT)
                 .desc("The proxy port to use when downloading resources.").build();
-
         final Option proxyUsername = Option.builder().argName("user").hasArg().longOpt(ARGUMENT.PROXY_USERNAME)
                 .desc("The proxy username to use when downloading resources.").build();
-
         final Option proxyPassword = Option.builder().argName("pass").hasArg().longOpt(ARGUMENT.PROXY_PASSWORD)
                 .desc("The proxy password to use when downloading resources.").build();
-
         final Option connectionString = Option.builder().argName("connStr").hasArg().longOpt(ARGUMENT.CONNECTION_STRING)
                 .desc("The connection string to the database.").build();
-
         final Option dbUser = Option.builder().argName("user").hasArg().longOpt(ARGUMENT.DB_NAME)
                 .desc("The username used to connect to the database.").build();
-
         final Option dbPassword = Option.builder().argName("password").hasArg().longOpt(ARGUMENT.DB_PASSWORD)
                 .desc("The password for connecting to the database.").build();
-
         final Option dbDriver = Option.builder().argName("driver").hasArg().longOpt(ARGUMENT.DB_DRIVER)
                 .desc("The database driver name.").build();
-
         final Option dbDriverPath = Option.builder().argName("path").hasArg().longOpt(ARGUMENT.DB_DRIVER_PATH)
                 .desc("The path to the database driver; note, this does not need to be set unless the JAR is outside of the classpath.")
                 .build();
-
         final Option disableJarAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_JAR)
                 .desc("Disable the Jar Analyzer.").build();
-
         final Option disableArchiveAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_ARCHIVE)
                 .desc("Disable the Archive Analyzer.").build();
-
         final Option disableNuspecAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_NUSPEC)
                 .desc("Disable the Nuspec Analyzer.").build();
-
         final Option disableAssemblyAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_ASSEMBLY)
                 .desc("Disable the .NET Assembly Analyzer.").build();
-
         final Option disablePythonDistributionAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_PY_DIST)
                 .desc("Disable the Python Distribution Analyzer.").build();
-
         final Option disablePythonPackageAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_PY_PKG)
                 .desc("Disable the Python Package Analyzer.").build();
-
         final Option disableComposerAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_COMPOSER)
                 .desc("Disable the PHP Composer Analyzer.").build();
-
         final Option disableAutoconfAnalyzer = Option.builder()
                 .longOpt(ARGUMENT.DISABLE_AUTOCONF)
                 .desc("Disable the Autoconf Analyzer.").build();
-
         final Option disableOpenSSLAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_OPENSSL)
                 .desc("Disable the OpenSSL Analyzer.").build();
         final Option disableCmakeAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_CMAKE)
                 .desc("Disable the Cmake Analyzer.").build();
-
         final Option cocoapodsAnalyzerEnabled = Option.builder().longOpt(ARGUMENT.DISABLE_COCOAPODS)
                 .desc("Disable the CocoaPods Analyzer.").build();
         final Option swiftPackageManagerAnalyzerEnabled = Option.builder().longOpt(ARGUMENT.DISABLE_SWIFT)
                 .desc("Disable the swift package Analyzer.").build();
-
         final Option disableCentralAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_CENTRAL)
                 .desc("Disable the Central Analyzer. If this analyzer is disabled it is likely you also want to disable "
                         + "the Nexus Analyzer.").build();
-
         final Option disableNexusAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_NEXUS)
                 .desc("Disable the Nexus Analyzer.").build();
-
         final Option disableOssIndexAnalyzer = Option.builder().longOpt(ARGUMENT.DISABLE_OSSINDEX)
                 .desc("Disable the Sonatype OSS Index Analyzer.").build();
 
         final Option purge = Option.builder().longOpt(ARGUMENT.PURGE_NVD)
                 .desc("Purges the local NVD data cache")
+                .build();
+        final Option retireJsFilters = Option.builder().argName("pattern").hasArg().longOpt(ARGUMENT.RETIREJS_FILTERS)
+                .desc("Specify Retire JS content filter used to exclude files from analysis based on their content; most commonly used "
+                        + "to exclude based on your applications own copyright line. This option can be specified multiple times.")
                 .build();
 
         options.addOption(updateOnly)
@@ -512,6 +482,28 @@ public final class CliParser {
                         .desc("Disable the Node.js Package Analyzer.").build())
                 .addOption(Option.builder().longOpt(ARGUMENT.DISABLE_NSP)
                         .desc("Disable the NSP Package Analyzer.").build())
+                .addOption(Option.builder().longOpt(ARGUMENT.DISABLE_RETIRE_JS)
+                        .desc("Disable the RetireJS Analyzer.").build())
+                .addOption(Option.builder().longOpt(ARGUMENT.RETIREJS_FILTER_NON_VULNERABLE)
+                        .desc("Specifies that the Retire JS Analyzer should filter out non-vulnerable JS files from the report.").build())
+                .addOption(Option.builder().longOpt(ARGUMENT.ARTIFACTORY_ENABLED)
+                        .desc("Whether the Artifactory Analyzer should be enabled.").build())
+                .addOption(Option.builder().longOpt(ARGUMENT.ARTIFACTORY_PARALLEL_ANALYSIS)
+                        .desc("Whether the Artifactory Analyzer should use parallel analysis.")
+                        .argName("true/false").hasArg(true).build())
+                .addOption(Option.builder().longOpt(ARGUMENT.ARTIFACTORY_USES_PROXY)
+                        .desc("Whether the Artifactory Analyzer should use the proxy.")
+                        .argName("true/false").hasArg(true).build())
+                .addOption(Option.builder().longOpt(ARGUMENT.ARTIFACTORY_USERNAME)
+                        .desc("The Artifactory username for authentication.")
+                        .argName("username").hasArg(true).build())
+                .addOption(Option.builder().longOpt(ARGUMENT.ARTIFACTORY_API_TOKEN)
+                        .desc("The Artifactory API token.")
+                        .argName("token").hasArg(true).build())
+                .addOption(Option.builder().longOpt(ARGUMENT.ARTIFACTORY_BEARER_TOKEN)
+                        .desc("The Artifactory bearer token.")
+                        .argName("token").hasArg(true).build())
+                .addOption(retireJsFilters)
                 .addOption(nexusUrl)
                 .addOption(nexusUsesProxy)
                 .addOption(additionalZipExtensions)
@@ -773,6 +765,16 @@ public final class CliParser {
     }
 
     /**
+     * Returns true if the disableRetireJS command line argument was specified.
+     *
+     * @return true if the disableRetireJS command line argument was specified;
+     * otherwise false
+     */
+    public boolean isRetireJSDisabled() {
+        return hasDisableOption(ARGUMENT.DISABLE_RETIRE_JS, Settings.KEYS.ANALYZER_RETIRED_ENABLED);
+    }
+
+    /**
      * Returns true if the disableCocoapodsAnalyzer command line argument was
      * specified.
      *
@@ -840,6 +842,48 @@ public final class CliParser {
     }
 
     /**
+     * Returns whether or not the argument exists.
+     *
+     * @param argument the argument
+     * @return whether or not the argument exists
+     */
+    public boolean hasArgument(String argument) {
+        if (line != null && line.hasOption(argument)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the argument boolean value.
+     *
+     * @param argument the argument
+     * @return the argument boolean value
+     */
+    public Boolean getBooleanArgument(String argument) {
+        if (line != null && line.hasOption(argument)) {
+            final String value = line.getOptionValue(argument);
+            if (value != null) {
+                return Boolean.parseBoolean(value);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the argument value.
+     *
+     * @param argument the argument
+     * @return the value of the argument
+     */
+    public String getStringArgument(String argument) {
+        if (line != null && line.hasOption(argument)) {
+            return line.getOptionValue(argument);
+        }
+        return null;
+    }
+
+    /**
      * Displays the command line help message to the standard output.
      */
     public void printHelp() {
@@ -880,6 +924,27 @@ public final class CliParser {
      */
     public String[] getExcludeList() {
         return line.getOptionValues(ARGUMENT.EXCLUDE);
+    }
+
+    /**
+     * Retrieves the list of retire JS content filters used to exclude JS files
+     * by content.
+     *
+     * @return the retireJS filters
+     */
+    public String[] getRetireJsFilters() {
+        return line.getOptionValues(ARGUMENT.RETIREJS_FILTERS);
+    }
+
+    /**
+     * Returns whether or not the retireJS analyzer should exclude
+     * non-vulnerable JS from the report.
+     *
+     * @return <code>true</code> if non-vulnerable JS should be filtered in the
+     * RetireJS Analyzer; otherwise <code>null</code>
+     */
+    public Boolean isRetireJsFilterNonVulnerable() {
+        return (line != null && line.hasOption(ARGUMENT.RETIREJS_FILTER_NON_VULNERABLE)) ? true : null;
     }
 
     /**
@@ -1499,6 +1564,10 @@ public final class CliParser {
          */
         public static final String DISABLE_NSP = "disableNSP";
         /**
+         * Disables the RetireJS Analyzer.
+         */
+        public static final String DISABLE_RETIRE_JS = "disableRetireJS";
+        /**
          * The URL of the nexus server.
          */
         public static final String NEXUS_URL = "nexus";
@@ -1549,14 +1618,57 @@ public final class CliParser {
         /**
          * The CLI argument to enable the experimental analyzers.
          */
-        private static final String EXPERIMENTAL = "enableExperimental";
+        public static final String EXPERIMENTAL = "enableExperimental";
         /**
          * The CLI argument to enable the retired analyzers.
          */
-        private static final String RETIRED = "enableRetired";
+        public static final String RETIRED = "enableRetired";
+        /**
+         * The CLI argument for the retire js content filters.
+         */
+        public static final String RETIREJS_FILTERS = "retirejsFilter";
+        /**
+         * The CLI argument for the retire js content filters.
+         */
+        public static final String RETIREJS_FILTER_NON_VULNERABLE = "retirejsFilterNonVulnerable";
+        /**
+         * The CLI argument for indicating if the Artifactory analyzer should be
+         * enabled.
+         */
+        public static final String ARTIFACTORY_ENABLED = "enableArtifactory";
+        /**
+         * The CLI argument for indicating if the Artifactory analyzer should
+         * use the proxy.
+         */
+        public static final String ARTIFACTORY_URL = "artifactoryUrl";
+
+        /**
+         * The CLI argument for indicating the Artifactory username.
+         */
+        public static final String ARTIFACTORY_USERNAME = "artifactoryUsername";
+        /**
+         * The CLI argument for indicating the Artifactory API token.
+         */
+        public static final String ARTIFACTORY_API_TOKEN = "artifactoryApiToken";
+        /**
+         * The CLI argument for indicating the Artifactory bearer token.
+         */
+        public static final String ARTIFACTORY_BEARER_TOKEN = "artifactoryBearerToken";
+
+        /**
+         * The CLI argument for indicating if the Artifactory analyzer should
+         * use the proxy.
+         */
+        public static final String ARTIFACTORY_USES_PROXY = "artifactoryUseProxy";
+        /**
+         * The CLI argument for indicating if the Artifactory analyzer should
+         * use the parallel analysis.
+         */
+        public static final String ARTIFACTORY_PARALLEL_ANALYSIS = "artifactoryParallelAnalysis";
+
         /**
          * The CLI argument to enable the experimental analyzers.
          */
-        private static final String FAIL_ON_CVSS = "failOnCVSS";
+        public static final String FAIL_ON_CVSS = "failOnCVSS";
     }
 }

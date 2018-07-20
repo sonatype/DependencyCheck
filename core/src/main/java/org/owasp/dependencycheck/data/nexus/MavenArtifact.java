@@ -23,6 +23,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * Simple bean representing a Maven Artifact.
  *
  * @author colezlaw
+ * @author nhenneaux
  */
 @ThreadSafe
 public class MavenArtifact {
@@ -117,6 +118,35 @@ public class MavenArtifact {
     }
 
     /**
+     * Creates a MavenArtifact with the given attributes.
+     *
+     * @param groupId the groupId
+     * @param artifactId the artifactId
+     * @param version the version
+     * @param artifactUrl the artifactLink url
+     * @param pomUrl the pomUrl
+     */
+    public MavenArtifact(String groupId, String artifactId, String version, String artifactUrl, String pomUrl) {
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+        this.version = version;
+        this.artifactUrl = artifactUrl;
+        this.pomUrl = pomUrl;
+    }
+
+    /**
+     * Tries to determine the URL to the pom.xml.
+     *
+     * @param artifactId the artifact id
+     * @param version the version
+     * @param artifactUrl the artifact URL
+     * @return the string representation of the URL
+     */
+    public static String derivePomUrl(String artifactId, String version, String artifactUrl) {
+        return artifactUrl.substring(0, artifactUrl.lastIndexOf('/')) + '/' + artifactId + '-' + version + ".pom";
+    }
+
+    /**
      * Returns the Artifact coordinates as a String.
      *
      * @return the String representation of the artifact coordinates
@@ -124,15 +154,6 @@ public class MavenArtifact {
     @Override
     public String toString() {
         return String.format("%s:%s:%s", groupId, artifactId, version);
-    }
-
-    /**
-     * Sets the groupId.
-     *
-     * @param groupId the groupId
-     */
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
     }
 
     /**
@@ -145,12 +166,12 @@ public class MavenArtifact {
     }
 
     /**
-     * Sets the artifactId.
+     * Sets the groupId.
      *
-     * @param artifactId the artifactId
+     * @param groupId the groupId
      */
-    public void setArtifactId(String artifactId) {
-        this.artifactId = artifactId;
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 
     /**
@@ -163,12 +184,12 @@ public class MavenArtifact {
     }
 
     /**
-     * Sets the version.
+     * Sets the artifactId.
      *
-     * @param version the version
+     * @param artifactId the artifactId
      */
-    public void setVersion(String version) {
-        this.version = version;
+    public void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
     }
 
     /**
@@ -181,12 +202,12 @@ public class MavenArtifact {
     }
 
     /**
-     * Sets the artifactUrl.
+     * Sets the version.
      *
-     * @param artifactUrl the artifactUrl
+     * @param version the version
      */
-    public void setArtifactUrl(String artifactUrl) {
-        this.artifactUrl = artifactUrl;
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -196,6 +217,15 @@ public class MavenArtifact {
      */
     public String getArtifactUrl() {
         return artifactUrl;
+    }
+
+    /**
+     * Sets the artifactUrl.
+     *
+     * @param artifactUrl the artifactUrl
+     */
+    public void setArtifactUrl(String artifactUrl) {
+        this.artifactUrl = artifactUrl;
     }
 
     /**

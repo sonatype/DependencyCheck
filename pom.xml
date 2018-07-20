@@ -20,7 +20,7 @@ Copyright (c) 2012 - Jeremy Long
 
     <groupId>org.owasp</groupId>
     <artifactId>dependency-check-parent</artifactId>
-    <version>3.2.2-SNAPSHOT</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -138,8 +138,8 @@ Copyright (c) 2012 - Jeremy Long
         <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
         <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
         <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
-        <maven-project-info-reports-plugin.version>2.9</maven-project-info-reports-plugin.version>
-        <maven-surefire-report-plugin.version>2.21.0</maven-surefire-report-plugin.version>
+        <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
+        <maven-surefire-report-plugin.version>2.22.0</maven-surefire-report-plugin.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
         <findbugs-maven-plugin.version>3.0.5</findbugs-maven-plugin.version>
         <taglist-maven-plugin.version>2.4</taglist-maven-plugin.version>
@@ -156,12 +156,13 @@ Copyright (c) 2012 - Jeremy Long
 
         <!--upgrading beyond lang3 3.4 may cause issues with the Jenkins plugin-->
         <commons-lang3.version>3.7</commons-lang3.version>
+        <!-- upgrading beyond 1.3 breaks Java 7 compatability -->
         <commons-text.version>1.3</commons-text.version>
         <com.sun.mail.mailapi.version>1.6.1</com.sun.mail.mailapi.version>
         <junit.version>4.12</junit.version>
         <hamcrest-core.version>1.3</hamcrest-core.version>
-        <org.jmockit.version>1.39</org.jmockit.version>
-
+        <org.jmockit.version>1.40</org.jmockit.version>
+        <mockito-core.version>2.19.1</mockito-core.version>
         <jsoup.version>1.11.3</jsoup.version>
         <commons-compress.version>1.17</commons-compress.version>
         <org.apache.maven.shared.file-management.version>3.0.0</org.apache.maven.shared.file-management.version>
@@ -176,7 +177,7 @@ Copyright (c) 2012 - Jeremy Long
         <maven-dependency-tree.version>3.0.1</maven-dependency-tree.version>
 
         <org.glassfish.javax.json.version>1.0.4</org.glassfish.javax.json.version>
-        <maven-artifact-transfer.version>0.9.1</maven-artifact-transfer.version>
+        <maven-artifact-transfer.version>0.10.0</maven-artifact-transfer.version>
         <groovy-all.version>2.4.15</groovy-all.version>
         <!-- upgrading beyond 1.5 will cause the build to fail on Java 7 -->
         <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
@@ -237,12 +238,12 @@ Copyright (c) 2012 - Jeremy Long
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0-M1</version>
+                    <version>3.0.0-M2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.16</version>
+                    <version>1.17</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -252,7 +253,7 @@ Copyright (c) 2012 - Jeremy Long
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.21.0</version>
+                    <version>2.22.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -294,7 +295,7 @@ Copyright (c) 2012 - Jeremy Long
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.21.0</version>
+                    <version>2.22.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -566,6 +567,10 @@ Copyright (c) 2012 - Jeremy Long
                     <argLine>${failsafeArgLine}</argLine>
                     <systemProperties>
                         <property>
+                            <name>data.directory</name>
+                            <value>${project.build.directory}/data</value>
+                        </property>
+                        <property>
                             <name>temp.directory</name>
                             <value>${project.build.directory}/temp</value>
                         </property>
@@ -717,22 +722,14 @@ Copyright (c) 2012 - Jeremy Long
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>cim</report>
-                            <!--
-                            <report>dependencies</report>
-                            <report>dependency-convergence</report>
-                            <report>dependency-info</report>
-                            <report>dependency-management</report>
-                            <report>distribution-management</report>
-                            <report>index</report>
-                            -->
                             <report>summary</report>
-                            <report>mailing-list</report>
-                            <report>issue-tracking</report>
+                            <report>issue-management </report>
+                            <report>mailing-lists</report>
                             <report>modules</report>
-                            <report>project-team</report>
+                            <report>team</report>
                             <report>scm</report>
-                            <report>license</report>
+                            <report>ci-management</report>
+                            <report>licenses</report>
                         </reports>
                     </reportSet>
                 </reportSets>
@@ -918,6 +915,11 @@ Copyright (c) 2012 - Jeremy Long
                 <version>${apache.lucene.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.h3xstream.retirejs</groupId>
+                <artifactId>retirejs-core</artifactId>
+                <version>3.0.1</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-core</artifactId>
                 <version>${maven.api.version}</version>
@@ -989,6 +991,12 @@ Copyright (c) 2012 - Jeremy Long
                 <groupId>org.jmockit</groupId>
                 <artifactId>jmockit</artifactId>
                 <version>${org.jmockit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

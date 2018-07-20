@@ -117,6 +117,7 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
         nodeModule.setEcosystem(NPM_DEPENDENCY_ECOSYSTEM);
         //this is virtual - the sha1 is purely for the hyperlink in the final html report
         nodeModule.setSha1sum(Checksum.getSHA1Checksum(String.format("%s:%s", name, version)));
+        nodeModule.setSha256sum(Checksum.getSHA256Checksum(String.format("%s:%s", name, version)));
         nodeModule.setMd5sum(Checksum.getMD5Checksum(String.format("%s:%s", name, version)));
         nodeModule.addEvidence(EvidenceType.PRODUCT, "package.json", "name", name, Confidence.HIGHEST);
         nodeModule.addEvidence(EvidenceType.VENDOR, "package.json", "name", name, Confidence.HIGH);
@@ -242,10 +243,12 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
      * @param dependency the dependency to add the evidence too
      */
     public void gatherEvidence(final JsonObject json, Dependency dependency) {
+        String displayName = null;
         if (json.containsKey("name")) {
             final Object value = json.get("name");
             if (value instanceof JsonString) {
                 final String valueString = ((JsonString) value).getString();
+                displayName = valueString;
                 dependency.setName(valueString);
                 dependency.setPackagePath(valueString);
                 dependency.addEvidence(EvidenceType.PRODUCT, PACKAGE_JSON, "name", valueString, Confidence.HIGHEST);
@@ -256,13 +259,22 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
         }
         final String desc = addToEvidence(dependency, EvidenceType.PRODUCT, json, "description");
         dependency.setDescription(desc);
-        addToEvidence(dependency, EvidenceType.VENDOR, json, "author");
+        final String vendor = addToEvidence(dependency, EvidenceType.VENDOR, json, "author");
         final String version = addToEvidence(dependency, EvidenceType.VERSION, json, "version");
         if (version != null) {
+            displayName = String.format("%s:%s", displayName, version);
             dependency.setVersion(version);
             dependency.addIdentifier("npm", String.format("%s:%s", dependency.getName(), version), null, Confidence.HIGHEST);
         }
-
+        if (displayName != null) {
+            dependency.setDisplayFileName(displayName);
+            dependency.setPackagePath(displayName);
+        } else {
+            LOGGER.warn("Unable to determine package name or version for {}", dependency.getActualFilePath());
+            if (vendor != null && !vendor.isEmpty()) {
+                dependency.setDisplayFileName(String.format("%s package.json", vendor));
+            }
+        }
         // Adds the license if defined in package.json
         if (json.containsKey("license")) {
             final Object value = json.get("license");

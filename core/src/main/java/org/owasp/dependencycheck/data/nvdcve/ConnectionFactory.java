@@ -20,6 +20,7 @@ package org.owasp.dependencycheck.data.nvdcve;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -272,7 +273,7 @@ public final class ConnectionFactory {
      * @throws IOException thrown if there is an error
      */
     public static File getH2DataFile(Settings configuration) throws IOException {
-        final File dir = configuration.getDataDirectory();
+        final File dir = configuration.getH2DataDirectory();
         final String fileName = configuration.getString(Settings.KEYS.DB_FILE_NAME);
         final File file = new File(dir, fileName);
         return file;
@@ -317,7 +318,7 @@ public final class ConnectionFactory {
         LOGGER.debug("Creating database structure");
 
         try (InputStream is = FileUtils.getResourceAsStream(DB_STRUCTURE_RESOURCE)) {
-            final String dbStructure = IOUtils.toString(is, "UTF-8");
+            final String dbStructure = IOUtils.toString(is, StandardCharsets.UTF_8);
 
             Statement statement = null;
             try {
@@ -363,7 +364,7 @@ public final class ConnectionFactory {
                 if (is == null) {
                     throw new DatabaseException(String.format("Unable to load update file '%s'", updateFile));
                 }
-                final String dbStructureUpdate = IOUtils.toString(is, "UTF-8");
+                final String dbStructureUpdate = IOUtils.toString(is, StandardCharsets.UTF_8);
 
                 Statement statement = null;
                 try {
