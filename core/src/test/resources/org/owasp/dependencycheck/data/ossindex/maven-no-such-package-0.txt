@@ -1,0 +1,10 @@
+[
+  {
+    "id": 0,
+    "pm": "maven",
+    "name": "no-such-package",
+    "version": "0",
+    "vulnerability-total": 0,
+    "vulnerability-matches": 0
+  }
+]

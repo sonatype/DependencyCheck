@@ -1,0 +1,45 @@
+[
+  {
+    "id": 8396450687,
+    "pm": "nuget",
+    "name": "jQuery",
+    "version": "1.9.0",
+    "vulnerability-total": 7,
+    "vulnerability-matches": 2,
+    "vulnerabilities": [
+      {
+        "id": 8399962417,
+        "resource": "https://github.com/jquery/jquery/issues/2432",
+        "title": "Cross Site Scripting (XSS)",
+        "description": "Requests to third-party resources with a text/javascript response type are automatically evaluated, which can result in the execution of arbitrary code.",
+        "versions": [
+          ">=1.4.0 <=1.11.3 || >=1.12.4 <3.0.0-beta1"
+        ],
+        "references": [
+          "https://cwe.mitre.org/data/definitions/79.html",
+          "https://github.com/jquery/jquery/commit/b078a62013782c7424a4a61a240c23c4c0b42614",
+          "https://github.com/jquery/jquery/issues/2432",
+          "https://github.com/jquery/jquery/pull/2588",
+          "https://nodesecurity.io/advisories/328"
+        ],
+        "published": 1470469775500,
+        "updated": 1490153875967
+      },
+      {
+        "id": 8400152728,
+        "resource": "https://github.com/jquery/jquery/issues/1505",
+        "title": "Cross Site Scripting (XSS) in parseHTML",
+        "description": "> Scripts passed in event attributes are executed in parseHTML immediately, without any possibility for the user to intervene\n> \n> -- [github.com](https://github.com/jquery/jquery/pull/1505)",
+        "versions": [
+          "<3.0.0"
+        ],
+        "references": [
+          "https://cwe.mitre.org/data/definitions/79.html",
+          "https://github.com/jquery/jquery/issues/1505"
+        ],
+        "published": 1474177702003,
+        "updated": 1488055351698
+      }
+    ]
+  }
+]
