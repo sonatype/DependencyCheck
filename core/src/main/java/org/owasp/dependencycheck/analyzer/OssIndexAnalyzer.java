@@ -165,7 +165,9 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         Vulnerability result = new Vulnerability();
         result.setSource(Vulnerability.Source.OSSINDEX);
 
-        result.setName(String.format("%s: %s", source.getId(), source.getTitle()));
+        // FIXME: this may not be ideal, but the present data model lacks a more concise identifier to use here that is human comprehensible
+        result.setName(source.getTitle());
+
         result.setDescription(source.getDescription());
         if (source.getCvssScore() != null) {
             result.setCvssScore(source.getCvssScore());
