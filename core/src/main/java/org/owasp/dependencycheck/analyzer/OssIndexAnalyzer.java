@@ -37,7 +37,20 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
     private OssindexClient client;
 
+    /**
+     * Fetched reports.
+     */
     private Map<PackageUrl,ComponentReport> reports;
+
+    /**
+     * Flag to indicate if fetching reports failed.
+     */
+    private boolean failed = false;
+
+    /**
+     * Lock to protect fetching state.
+     */
+    private final Object fetchMutex = new Object();
 
     @Override
     public String getName() {
@@ -52,6 +65,16 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     @Override
     protected String getAnalyzerEnabledSettingKey() {
         return Settings.KEYS.ANALYZER_OSSINDEX_ENABLED;
+    }
+
+    /**
+     * Run with parallel support.
+     *
+     * Fetch logic will however block all threads when state is established.
+     */
+    @Override
+    public boolean supportsParallelProcessing() {
+        return true;
     }
 
     @Override
@@ -72,18 +95,22 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         }
 
         // batch request package-reports for all dependencies
-        synchronized (this) {
-            if (reports == null) {
+        synchronized (fetchMutex) {
+            if (!failed && reports == null) {
                 try {
                     reports = requestReports(engine.getDependencies());
                 }
                 catch (Exception e) {
+                    failed = true;
                     throw new AnalysisException("Failed to request package-reports", e);
                 }
             }
         }
 
-        enrich(dependency);
+        // skip enrichment if we failed to fetch reports
+        if (!failed) {
+            enrich(dependency);
+        }
     }
 
     /**
