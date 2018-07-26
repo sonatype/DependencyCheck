@@ -1022,7 +1022,7 @@ Copyright (c) 2012 - Jeremy Long
             <dependency>
                 <groupId>org.sonatype.ossindex</groupId>
                 <artifactId>ossindex-service-client</artifactId>
-                <version>1.0.0</version>
+                <version>1-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.httpcomponents</groupId>
