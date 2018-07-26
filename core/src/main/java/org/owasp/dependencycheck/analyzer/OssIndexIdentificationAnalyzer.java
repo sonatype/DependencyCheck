@@ -49,6 +49,14 @@ public class OssIndexIdentificationAnalyzer extends AbstractAnalyzer {
         return Settings.KEYS.ANALYZER_OSSINDEX_ENABLED;
     }
 
+    /**
+     * When DEBUG is enabled, run analysis serially.
+     */
+    @Override
+    public boolean supportsParallelProcessing() {
+        return !log.isDebugEnabled();
+    }
+
     @Override
     protected void prepareAnalyzer(final Engine engine) throws InitializationException {
         detectors = loadDetectors();
