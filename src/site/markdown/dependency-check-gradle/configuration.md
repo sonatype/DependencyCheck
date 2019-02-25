@@ -25,8 +25,8 @@ apply plugin: 'org.owasp.dependencycheck'
 check.dependsOn dependencyCheckAnalyze
 ```
 
-Property             | Description                        | Default Value
----------------------|------------------------------------|------------------
+Property             | Description                                                                                                        | Default Value
+---------------------|--------------------------------------------------------------------------------------------------------------------|------------------
 autoUpdate           | Sets whether auto-updating of the NVD CVE/CPE data is enabled. It is not recommended that this be turned to false. | true
 analyzedTypes        | The default artifact types that will be analyzed.                                                                  | ['jar', 'aar', 'js', 'war', 'ear', 'zip']
 cveValidForHours     | Sets the number of hours to wait before checking for new updates from the NVD.                                     | 4
@@ -39,7 +39,8 @@ suppressionFile      | The file path to the XML suppression file \- used to supp
 hintsFile            | The file path to the XML hints file \- used to resolve [false negatives](../general/hints.html)                    | &nbsp;
 skip                 | If set to true dependency-check analysis will be skipped.                                                          | false
 skipConfigurations   | A list of configurations that will be skipped. This is mutually exclusive with the scanConfigurations property.    | `[]` which means no configuration is skipped.
-scanConfigurations   | A list of configurations that will be scanned, all other configurations are skipped. This is mutually exclusive with the skipConfigurations property.    | `[]` which implicitly means all configurations get scanned.
+scanConfigurations   | A list of configurations that will be scanned, all other configurations are skipped. This is mutually exclusive with the skipConfigurations property. | `[]` which implicitly means all configurations get scanned.
+scanSet              | A list of directories that will be scanned for additional dependencies.                                            | ['src/main/resources','src/main/webapp']
 
 #### Example
 ```groovy
@@ -77,16 +78,14 @@ Note, if ANY of the cve configuration group are set - they should all be set to 
 
 Config Group | Property          | Description                                                                                 | Default Value
 -------------|-------------------|---------------------------------------------------------------------------------------------|------------------
-cve          | url12Modified     | URL for the modified CVE 1.2.                                                               | https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-modified.xml.gz
-cve          | url20Modified     | URL for the modified CVE 2.0.                                                               | https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-Modified.xml.gz
-cve          | url12Base         | Base URL for each year's CVE 1.2, the %d will be replaced with the year.                    | https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-%d.xml.gz
-cve          | url20Base         | Base URL for each year's CVE 2.0, the %d will be replaced with the year.                    | https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%d.xml.gz
-data         | directory         | Sets the data directory to hold SQL CVEs contents. This should generally not be changed.    | &nbsp;
-data         | driver            | The name of the database driver. Example: org.h2.Driver.                                    | &nbsp;
-data         | driverPath        | The path to the database driver JAR file; only used if the driver is not in the class path. | &nbsp;
-data         | connectionString  | The connection string used to connect to the database.                                      | &nbsp;
-data         | username          | The username used when connecting to the database.                                          | &nbsp;
-data         | password          | The password used when connecting to the database.                                          | &nbsp;
+cve          | cveUrlModified    | URL for the modified CVE JSON data feed.                                                    | https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz |
+cve          | cveUrlBase        | Base URL for each year's CVE JSON data feed, the %d will be replaced with the year.         | https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz       |
+data         | directory         | Sets the data directory to hold SQL CVEs contents. This should generally not be changed.    | &nbsp;                                                              |
+data         | driver            | The name of the database driver. Example: org.h2.Driver.                                    | &nbsp;                                                              |
+data         | driverPath        | The path to the database driver JAR file; only used if the driver is not in the class path. | &nbsp;                                                              |
+data         | connectionString  | The connection string used to connect to the database.                                      | &nbsp;                                                              |
+data         | username          | The username used when connecting to the database.                                          | &nbsp;                                                              |
+data         | password          | The password used when connecting to the database.                                          | &nbsp;                                                              |
 
 #### Example
 ```groovy
@@ -119,13 +118,14 @@ analyzers    | pyPackageEnabled      | Sets whether the [experimental](../analyz
 analyzers    | rubygemsEnabled       | Sets whether the [experimental](../analyzers/index.html) Ruby Gemspec Analyzer will be used.                      | true
 analyzers    | opensslEnabled        | Sets whether or not the openssl Analyzer should be used.                                                          | true
 analyzers    | nuspecEnabled         | Sets whether or not the .NET Nuget Nuspec Analyzer will be used.                                                  | true
+analyzers    | nugetconfEnabled      | Sets whether or not the [experimental](../analyzers/index.html) .NET Nuget packages.config Analyzer will be used.                                         | true
 analyzers    | assemblyEnabled       | Sets whether or not the .NET Assembly Analyzer should be used.                                                    | true
 analyzers    | pathToMono            | The path to Mono for .NET assembly analysis on non-windows systems.                                               | &nbsp;
 analyzers    | cmakeEnabled          | Sets whether or not the [experimental](../analyzers/index.html) CMake Analyzer should be used.                    | true
 analyzers    | autoconfEnabled       | Sets whether or not the [experimental](../analyzers/index.html) autoconf Analyzer should be used.                 | true
 analyzers    | composerEnabled       | Sets whether or not the [experimental](../analyzers/index.html) PHP Composer Lock File Analyzer should be used.   | true
-analyzers    | nodeEnabled           | Sets whether or not the [retired](../analyzers/index.html) Node.js Analyzer should be used.                  | true
-analyzers    | nspEnabled            | Sets whether the NSP Analyzer should be used.                                                                     | true
+analyzers    | nodeEnabled           | Sets whether or not the Node.js Analyzer should be used.                  | true
+analyzers    | nodeAuditEnabled      | Sets whether the Node Audit Analyzer should be used.                                                                     | true
 analyzers    | cocoapodsEnabled      | Sets whether or not the [experimental](../analyzers/index.html) Cocoapods Analyzer should be used.                | true
 analyzers    | swiftEnabled          | Sets whether or not the [experimental](../analyzers/index.html) Swift Package Manager Analyzer should be used.    | true
 analyzers    | bundleAuditEnabled    | Sets whether or not the [experimental](../analyzers/index.html) Ruby Bundle Audit Analyzer should be used.        | true

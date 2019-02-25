@@ -23,7 +23,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.owasp.dependencycheck.utils.Settings;
 
 /**
@@ -55,7 +54,7 @@ public class BaseTest {
 
     @AfterClass
     public static void tearDownClass() throws Exception {
-        File f = new File("./target/data/dc.h2.db");
+        File f = new File("./target/data/dc.mv.db");
         if (f.exists() && f.isFile() && f.length() < 71680) {
             System.err.println("------------------------------------------------");
             System.err.println("------------------------------------------------");

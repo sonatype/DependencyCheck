@@ -17,14 +17,12 @@
  */
 package org.owasp.dependencycheck.utils;
 
-import java.io.Closeable;
+import java.io.*;
+
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 import org.apache.commons.lang3.SystemUtils;
 
@@ -32,6 +30,7 @@ import org.apache.commons.lang3.SystemUtils;
  * A collection of utilities for processing information about files.
  *
  * @author Jeremy Long
+ * @version $Id: $Id
  */
 public final class FileUtils {
 
@@ -87,7 +86,7 @@ public final class FileUtils {
      *
      * @param base the base directory to create a temporary directory within
      * @return the temporary directory
-     * @throws IOException thrown when a directory cannot be created within the
+     * @throws java.io.IOException thrown when a directory cannot be created within the
      * base directory
      */
     public static File createTempDirectory(File base) throws IOException {
@@ -117,8 +116,8 @@ public final class FileUtils {
     }
 
     /**
-     * Close the given {@link Closeable} instance, ignoring nulls, and logging
-     * any thrown {@link IOException}.
+     * Close the given {@link java.io.Closeable} instance, ignoring nulls, and logging
+     * any thrown {@link java.io.IOException}.
      *
      * @param closeable to be closed
      */
@@ -133,14 +132,24 @@ public final class FileUtils {
     }
 
     /**
-     * Gets the {@link InputStream} for this resource.
+     * Gets the {@link java.io.InputStream} for this resource.
      *
      * @param resource path
      * @return the input stream for the given resource
      */
-    public static InputStream getResourceAsStream(String resource) {
-        return FileUtils.class.getClassLoader() != null
-                ? FileUtils.class.getClassLoader().getResourceAsStream(resource)
+    public static InputStream getResourceAsStream(final String resource) {
+        final ClassLoader classLoader = FileUtils.class.getClassLoader();
+        final InputStream inputStream = classLoader != null
+                ? classLoader.getResourceAsStream(resource)
                 : ClassLoader.getSystemResourceAsStream(resource);
+
+        if(inputStream == null) {
+            try {
+                return new FileInputStream(resource);
+            } catch (final FileNotFoundException e) {
+                LOGGER.error("Unable to create an Input Stream for " + resource, e);
+            }
+        }
+        return inputStream;
     }
 }

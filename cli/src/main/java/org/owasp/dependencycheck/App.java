@@ -128,7 +128,7 @@ public class App {
                 }
                 final File db;
                 try {
-                    db = new File(settings.getDataDirectory(), settings.getString(Settings.KEYS.DB_FILE_NAME, "dc.h2.db"));
+                    db = new File(settings.getDataDirectory(), settings.getString(Settings.KEYS.DB_FILE_NAME, "dc.mv.db"));
                     if (db.exists()) {
                         if (db.delete()) {
                             LOGGER.info("Database file purged; local copy of the NVD has been removed");
@@ -161,10 +161,10 @@ public class App {
             try {
                 runUpdateOnly();
             } catch (UpdateException ex) {
-                LOGGER.error(ex.getMessage());
+                LOGGER.error(ex.getMessage(), ex);
                 exitCode = -8;
             } catch (DatabaseException ex) {
-                LOGGER.error(ex.getMessage());
+                LOGGER.error(ex.getMessage(), ex);
                 exitCode = -9;
             } finally {
                 settings.cleanup();
@@ -202,6 +202,7 @@ public class App {
                 for (Throwable e : ex.getExceptions()) {
                     if (e.getMessage() != null) {
                         LOGGER.error(e.getMessage());
+                        LOGGER.debug("unexpected error", e);
                     }
                 }
             } finally {
@@ -292,7 +293,8 @@ public class App {
             if (!dep.getVulnerabilities().isEmpty()) {
                 for (Vulnerability vuln : dep.getVulnerabilities()) {
                     LOGGER.debug("VULNERABILITY FOUND {}", dep.getDisplayFileName());
-                    if (vuln.getCvssScore() > cvssFailScore) {
+                    if ((vuln.getCvssV2() != null && vuln.getCvssV2().getScore() > cvssFailScore) ||
+                            (vuln.getCvssV3() != null && vuln.getCvssV3().getBaseScore() > cvssFailScore)) {
                         retCode = 1;
                     }
                 }
@@ -320,7 +322,7 @@ public class App {
             final String tmpBase = include.substring(0, pos);
             final String tmpInclude = include.substring(pos + 1);
             if (tmpInclude.indexOf('*') >= 0 || tmpInclude.indexOf('?') >= 0
-                    || (new File(include)).isFile()) {
+                    || new File(include).isFile()) {
                 baseDir = new File(tmpBase);
                 include = tmpInclude;
             } else {
@@ -398,6 +400,8 @@ public class App {
         final String[] suppressionFiles = cli.getSuppressionFiles();
         final String hintsFile = cli.getHintsFile();
         final String nexusUrl = cli.getNexusUrl();
+        final String nexusUser = cli.getNexusUsername();
+        final String nexusPass = cli.getNexusPassword();
         final String databaseDriverName = cli.getDatabaseDriverName();
         final String databaseDriverPath = cli.getDatabaseDriverPath();
         final String connectionString = cli.getConnectionString();
@@ -405,10 +409,8 @@ public class App {
         final String databasePassword = cli.getDatabasePassword();
         final String additionalZipExtensions = cli.getAdditionalZipExtensions();
         final String pathToMono = cli.getPathToMono();
-        final String cveMod12 = cli.getModifiedCve12Url();
-        final String cveMod20 = cli.getModifiedCve20Url();
-        final String cveBase12 = cli.getBaseCve12Url();
-        final String cveBase20 = cli.getBaseCve20Url();
+        final String cveModified = cli.getModifiedCveUrl();
+        final String cveBase = cli.getBaseCveUrl();
         final Integer cveValidForHours = cli.getCveValidForHours();
         final Boolean autoUpdate = cli.isAutoUpdate();
         final Boolean experimentalEnabled = cli.isExperimentalEnabled();
@@ -461,12 +463,13 @@ public class App {
         settings.setBoolean(Settings.KEYS.ANALYZER_AUTOCONF_ENABLED, !cli.isAutoconfDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_CMAKE_ENABLED, !cli.isCmakeDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_NUSPEC_ENABLED, !cli.isNuspecDisabled());
+        settings.setBoolean(Settings.KEYS.ANALYZER_NUGETCONF_ENABLED, !cli.isNugetconfDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_ASSEMBLY_ENABLED, !cli.isAssemblyDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_BUNDLE_AUDIT_ENABLED, !cli.isBundleAuditDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_OPENSSL_ENABLED, !cli.isOpenSSLDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_COMPOSER_LOCK_ENABLED, !cli.isComposerDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_NODE_PACKAGE_ENABLED, !cli.isNodeJsDisabled());
-        settings.setBoolean(Settings.KEYS.ANALYZER_NSP_PACKAGE_ENABLED, !cli.isNspDisabled());
+        settings.setBoolean(Settings.KEYS.ANALYZER_NODE_AUDIT_ENABLED, !cli.isNodeAuditDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_RETIREJS_ENABLED, !cli.isRetireJSDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_SWIFT_PACKAGE_MANAGER_ENABLED, !cli.isSwiftPackageAnalyzerDisabled());
         settings.setBoolean(Settings.KEYS.ANALYZER_COCOAPODS_ENABLED, !cli.isCocoapodsAnalyzerDisabled());
@@ -492,6 +495,8 @@ public class App {
 
         settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_BUNDLE_AUDIT_PATH, cli.getPathToBundleAudit());
         settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_URL, nexusUrl);
+        settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_USER, nexusUser);
+        settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_PASSWORD, nexusPass);
         settings.setBoolean(Settings.KEYS.ANALYZER_NEXUS_USES_PROXY, nexusUsesProxy);
         settings.setStringIfNotEmpty(Settings.KEYS.DB_DRIVER_NAME, databaseDriverName);
         settings.setStringIfNotEmpty(Settings.KEYS.DB_DRIVER_PATH, databaseDriverPath);
@@ -500,11 +505,9 @@ public class App {
         settings.setStringIfNotEmpty(Settings.KEYS.DB_PASSWORD, databasePassword);
         settings.setStringIfNotEmpty(Settings.KEYS.ADDITIONAL_ZIP_EXTENSIONS, additionalZipExtensions);
         settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_ASSEMBLY_MONO_PATH, pathToMono);
-        if (cveBase12 != null && !cveBase12.isEmpty()) {
-            settings.setString(Settings.KEYS.CVE_SCHEMA_1_2, cveBase12);
-            settings.setString(Settings.KEYS.CVE_SCHEMA_2_0, cveBase20);
-            settings.setString(Settings.KEYS.CVE_MODIFIED_12_URL, cveMod12);
-            settings.setString(Settings.KEYS.CVE_MODIFIED_20_URL, cveMod20);
+        if (cveBase != null && !cveBase.isEmpty()) {
+            settings.setString(Settings.KEYS.CVE_BASE_JSON, cveBase);
+            settings.setString(Settings.KEYS.CVE_MODIFIED_JSON, cveModified);
         }
     }
 

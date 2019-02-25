@@ -41,6 +41,7 @@ import java.util.UUID;
  * A simple settings container that wraps the dependencycheck.properties file.
  *
  * @author Jeremy Long
+ * @version $Id: $Id
  */
 public final class Settings {
 
@@ -133,35 +134,28 @@ public final class Settings {
         public static final String DB_VERSION = "data.version";
         /**
          * The starts with filter used to exclude CVE entries from the database.
-         * By default this is set to 'cpe:/a:' which limits the CVEs imported to
-         * just those that are related to applications. If this were set to just
-         * 'cpe:' the OS, hardware, and application related CVEs would be
+         * By default this is set to 'cpe:2.3:a:' which limits the CVEs imported
+         * to just those that are related to applications. If this were set to
+         * just 'cpe:2.3:' the OS, hardware, and application related CVEs would be
          * imported.
          */
         public static final String CVE_CPE_STARTS_WITH_FILTER = "cve.cpe.startswith.filter";
         /**
-         * The properties key for the URL to retrieve the "meta" data from about
-         * the CVE entries.
-         *
-         * @deprecated this is not currently used
+         * The properties key for the URL to retrieve the recently modified and
+         * added CVE entries (last 8 days) using the 2.0 schema.
          */
-        @Deprecated
-        public static final String CVE_META_URL = "cve.url.meta";
+        public static final String CVE_MODIFIED_JSON = "cve.url.modified";
+        /**
+         * The properties key for the original/modified URL to retrieve the
+         * recently modified and added CVE entries (last 8 days). Note, this is
+         * only used to compare against CVE_MODIFIED_JSON.
+         */
+        public static final String CVE_ORIGINAL_JSON = "cve.url.original";
         /**
          * The properties key for the URL to retrieve the recently modified and
          * added CVE entries (last 8 days) using the 2.0 schema.
          */
-        public static final String CVE_MODIFIED_20_URL = "cve.url-2.0.modified";
-        /**
-         * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the 2.0 schema.
-         */
-        public static final String CVE_ORIGINAL_MODIFIED_20_URL = "cve.url-2.0.original";
-        /**
-         * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the 1.2 schema.
-         */
-        public static final String CVE_MODIFIED_12_URL = "cve.url-1.2.modified";
+        public static final String CVE_BASE_JSON = "cve.url.base";
         /**
          * The properties key for the URL to retrieve the recently modified and
          * added CVE entries (last 8 days).
@@ -179,14 +173,6 @@ public final class Settings {
          */
         public static final String CVE_START_YEAR = "cve.startyear";
         /**
-         * The properties key for the CVE schema version 1.2.
-         */
-        public static final String CVE_SCHEMA_1_2 = "cve.url-1.2.base";
-        /**
-         * The properties key for the CVE schema version 2.0.
-         */
-        public static final String CVE_SCHEMA_2_0 = "cve.url-2.0.base";
-        /**
          * The properties key that indicates how often the CPE data needs to be
          * updated.
          */
@@ -201,15 +187,6 @@ public final class Settings {
          * string.
          */
         public static final String PROXY_DISABLE_SCHEMAS = "proxy.disableSchemas";
-        /**
-         * The properties key for the proxy server.
-         *
-         * @deprecated use
-         * {@link org.owasp.dependencycheck.utils.Settings.KEYS#PROXY_SERVER}
-         * instead.
-         */
-        @Deprecated
-        public static final String PROXY_URL = "proxy.server";
         /**
          * The properties key for the proxy server.
          */
@@ -277,15 +254,13 @@ public final class Settings {
          */
         public static final String ANALYZER_NODE_PACKAGE_ENABLED = "analyzer.node.package.enabled";
         /**
-         * The properties key for whether the Node Security Platform (nsp)
-         * analyzer is enabled.
+         * The properties key for whether the Node Audit analyzer is enabled.
          */
-        public static final String ANALYZER_NSP_PACKAGE_ENABLED = "analyzer.nsp.package.enabled";
+        public static final String ANALYZER_NODE_AUDIT_ENABLED = "analyzer.node.audit.enabled";
         /**
-         * The properties key for supplying the URL to the Node Security
-         * Platform API.
+         * The properties key for supplying the URL to the Node Audit API.
          */
-        public static final String ANALYZER_NSP_URL = "analyzer.nsp.url";
+        public static final String ANALYZER_NODE_AUDIT_URL = "analyzer.node.audit.url";
         /**
          * The properties key for whether the RetireJS analyzer is enabled.
          */
@@ -300,7 +275,6 @@ public final class Settings {
          * out non-vulnerable dependencies.
          */
         public static final String ANALYZER_RETIREJS_FILTER_NON_VULNERABLE = "analyzer.retirejs.filternonvulnerable";
-
         /**
          * The properties key for defining the URL to the RetireJS repository.
          */
@@ -351,6 +325,11 @@ public final class Settings {
          */
         public static final String ANALYZER_NUSPEC_ENABLED = "analyzer.nuspec.enabled";
         /**
+         * The properties key for whether the .NET Nuget packages.config
+         * analyzer is enabled.
+         */
+        public static final String ANALYZER_NUGETCONF_ENABLED = "analyzer.nugetconf.enabled";
+        /**
          * The properties key for whether the .NET MSBuild Project analyzer is
          * enabled.
          */
@@ -363,6 +342,14 @@ public final class Settings {
          * The properties key for the Nexus search URL.
          */
         public static final String ANALYZER_NEXUS_URL = "analyzer.nexus.url";
+        /**
+         * The properties key for the Nexus search credentials username.
+         */
+        public static final String ANALYZER_NEXUS_USER = "analyzer.nexus.username";
+        /**
+         * The properties key for the Nexus search credentials password.
+         */
+        public static final String ANALYZER_NEXUS_PASSWORD = "analyzer.nexus.password";
         /**
          * The properties key for using the proxy to reach Nexus.
          */
@@ -530,7 +517,10 @@ public final class Settings {
          * The key to determine which ecosystems should skip the CPE analysis.
          */
         public static final String ECOSYSTEM_SKIP_CPEANALYZER = "ecosystem.skip.cpeanalyzer";
-
+        /**
+         * The key to determine minimum score for Lucene search matches.
+         */
+        public static final String LUCENE_MIN_SCORE_FILTER = "dependency.check.lucene.min.score";
         /**
          *
          * Adds capabilities to batch insert. Tested on PostgreSQL and H2.
@@ -573,6 +563,16 @@ public final class Settings {
     }
 
     /**
+     * Initialize the settings object using the given properties.
+     * @param properties the properties to be used with this Settings instance
+     * @since 4.0.3
+     */
+    public Settings(final Properties properties) {
+        props = properties;
+        logProperties("Properties loaded", props);
+    }
+
+    /**
      * Initialize the settings object using the given properties file.
      *
      * @param propertiesFilePath the path to the base properties file to load
@@ -602,7 +602,6 @@ public final class Settings {
 
     /**
      * Cleans up resources to prevent memory leaks.
-     *
      */
     public void cleanup() {
         cleanup(true);
@@ -707,7 +706,7 @@ public final class Settings {
      * @param value the value for the property
      */
     public void setArrayIfNotEmpty(String key, List<String> value) {
-        if (null != value && value.size() > 0) {
+        if (null != value && !value.isEmpty()) {
             setString(key, new Gson().toJson(value));
         }
     }
@@ -764,9 +763,9 @@ public final class Settings {
      * before properties loaded from files.
      *
      * @param filePath the path to the properties file to merge.
-     * @throws FileNotFoundException is thrown when the filePath points to a
+     * @throws java.io.FileNotFoundException is thrown when the filePath points to a
      * non-existent file
-     * @throws IOException is thrown when there is an exception loading/merging
+     * @throws java.io.IOException is thrown when there is an exception loading/merging
      * the properties
      */
     public void mergeProperties(File filePath) throws FileNotFoundException, IOException {
@@ -782,9 +781,9 @@ public final class Settings {
      * properties loaded from files.
      *
      * @param filePath the path to the properties file to merge.
-     * @throws FileNotFoundException is thrown when the filePath points to a
+     * @throws java.io.FileNotFoundException is thrown when the filePath points to a
      * non-existent file
-     * @throws IOException is thrown when there is an exception loading/merging
+     * @throws java.io.IOException is thrown when there is an exception loading/merging
      * the properties
      */
     public void mergeProperties(String filePath) throws FileNotFoundException, IOException {
@@ -800,7 +799,7 @@ public final class Settings {
      * before properties loaded from files.
      *
      * @param stream an Input Stream pointing at a properties file to merge
-     * @throws IOException is thrown when there is an exception loading/merging
+     * @throws java.io.IOException is thrown when there is an exception loading/merging
      * the properties
      */
     public void mergeProperties(InputStream stream) throws IOException {
@@ -901,8 +900,7 @@ public final class Settings {
      * Returns the temporary directory.
      *
      * @return the temporary directory
-     * @throws java.io.IOException thrown if the temporary directory does not
-     * exist and cannot be created
+     * @throws java.io.IOException if any.
      */
     public synchronized File getTempDirectory() throws IOException {
         if (tempDirectory == null) {
@@ -930,7 +928,7 @@ public final class Settings {
      *
      * If the property is not set then {@code null} will be returned.
      *
-     * @param key the key to get from this {@link Settings}.
+     * @param key the key to get from this {@link org.owasp.dependencycheck.utils.Settings}.
      * @return the list or {@code null} if the key wasn't present.
      */
     public String[] getArray(final String key) {
@@ -963,7 +961,7 @@ public final class Settings {
      *
      * @param key the key to lookup within the properties file
      * @return the property from the properties file
-     * @throws InvalidSettingException is thrown if there is an error retrieving
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
      * the setting
      */
     public int getInt(String key) throws InvalidSettingException {
@@ -1006,7 +1004,7 @@ public final class Settings {
      *
      * @param key the key to lookup within the properties file
      * @return the property from the properties file
-     * @throws InvalidSettingException is thrown if there is an error retrieving
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
      * the setting
      */
     public long getLong(String key) throws InvalidSettingException {
@@ -1026,7 +1024,7 @@ public final class Settings {
      *
      * @param key the key to lookup within the properties file
      * @return the property from the properties file
-     * @throws InvalidSettingException is thrown if there is an error retrieving
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
      * the setting
      */
     public boolean getBoolean(String key) throws InvalidSettingException {
@@ -1044,11 +1042,33 @@ public final class Settings {
      * @param defaultValue the default value to return if the setting does not
      * exist
      * @return the property from the properties file
-     * @throws InvalidSettingException is thrown if there is an error retrieving
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
      * the setting
      */
     public boolean getBoolean(String key, boolean defaultValue) throws InvalidSettingException {
         return Boolean.parseBoolean(getString(key, Boolean.toString(defaultValue)));
+    }
+
+    /**
+     * Returns a float value from the properties file. If the value was
+     * specified as a system property or passed in via the
+     * <code>-Dprop=value</code> argument this method will return the value from
+     * the system properties before the values in the contained configuration
+     * file.
+     *
+     * @param key the key to lookup within the properties file
+     * @param defaultValue the default value to return if the setting does not
+     * exist
+     * @return the property from the properties file
+     */
+    public float getFloat(String key, float defaultValue) {
+        float retValue = defaultValue;
+        try {
+            retValue = Float.parseFloat(getString(key));
+        } catch (Throwable ignore) {
+            LOGGER.trace("ignore", ignore);
+        }
+        return retValue;
     }
 
     /**
@@ -1061,8 +1081,8 @@ public final class Settings {
      * string
      * @param dbFileNameKey the settings key for the db filename
      * @return the connection string
-     * @throws IOException thrown the data directory cannot be created
-     * @throws InvalidSettingException thrown if there is an invalid setting
+     * @throws java.io.IOException thrown the data directory cannot be created
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException thrown if there is an invalid setting
      */
     public String getConnectionString(String connectionStringKey, String dbFileNameKey)
             throws IOException, InvalidSettingException {
@@ -1083,7 +1103,7 @@ public final class Settings {
                         dbFileNameKey);
                 throw new InvalidSettingException(msg);
             }
-            if (connStr.startsWith("jdbc:h2:file:") && fileName.endsWith(".h2.db")) {
+            if (connStr.startsWith("jdbc:h2:file:") && fileName.endsWith(".mv.db")) {
                 fileName = fileName.substring(0, fileName.length() - 6);
             }
             // yes, for H2 this path won't actually exists - but this is sufficient to get the value needed
@@ -1100,7 +1120,7 @@ public final class Settings {
      * content.
      *
      * @return the data directory to store data files
-     * @throws IOException is thrown if an IOException occurs of course...
+     * @throws java.io.IOException is thrown if an java.io.IOException occurs of course...
      */
     public File getDataDirectory() throws IOException {
         final File path = getDataFile(Settings.KEYS.DATA_DIRECTORY);
@@ -1116,7 +1136,7 @@ public final class Settings {
      * temp directory this method will return the temp directory.
      *
      * @return the data directory to store data files
-     * @throws IOException is thrown if an IOException occurs of course...
+     * @throws java.io.IOException is thrown if an java.io.IOException occurs of course...
      */
     public File getH2DataDirectory() throws IOException {
         final String h2Test = getString(Settings.KEYS.H2_DATA_DIRECTORY);
@@ -1139,8 +1159,7 @@ public final class Settings {
      * @param prefix the prefix for the file name to generate
      * @param extension the extension of the generated file name
      * @return a temporary File
-     * @throws java.io.IOException thrown if the temporary folder could not be
-     * created
+     * @throws java.io.IOException if any.
      */
     public File getTempFile(String prefix, String extension) throws IOException {
         final File dir = getTempDirectory();

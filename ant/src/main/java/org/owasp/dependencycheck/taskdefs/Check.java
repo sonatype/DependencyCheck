@@ -31,10 +31,9 @@ import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileProvider;
 import org.apache.tools.ant.types.resources.Resources;
 import org.owasp.dependencycheck.Engine;
+import org.owasp.dependencycheck.agent.DependencyCheckScanAgent;
 import org.owasp.dependencycheck.data.nvdcve.DatabaseException;
-import org.owasp.dependencycheck.data.update.exception.UpdateException;
 import org.owasp.dependencycheck.dependency.Dependency;
-import org.owasp.dependencycheck.dependency.Identifier;
 import org.owasp.dependencycheck.dependency.Vulnerability;
 import org.owasp.dependencycheck.exception.ExceptionCollection;
 import org.owasp.dependencycheck.exception.ReportException;
@@ -51,10 +50,6 @@ import org.slf4j.impl.StaticLoggerBinder;
 public class Check extends Update {
 
     /**
-     * System specific new line character.
-     */
-    private static final String NEW_LINE = System.getProperty("line.separator", "\n").intern();
-    /**
      * Whether the ruby gemspec analyzer should be enabled.
      */
     private Boolean rubygemsAnalyzerEnabled;
@@ -63,9 +58,9 @@ public class Check extends Update {
      */
     private Boolean nodeAnalyzerEnabled;
     /**
-     * Whether or not the NSP Analyzer is enabled.
+     * Whether or not the Node Audit Analyzer is enabled.
      */
-    private Boolean nspAnalyzerEnabled;
+    private Boolean nodeAuditAnalyzerEnabled;
     /**
      * Whether or not the RetireJS Analyzer is enabled.
      */
@@ -115,6 +110,14 @@ public class Check extends Update {
      */
     private String nexusUrl;
     /**
+     * The username to authenticate to the Nexus Server's REST API Endpoint.
+     */
+    private String nexusUser;
+    /**
+     * The password to authenticate to the Nexus Server's REST API Endpoint.
+     */
+    private String nexusPassword;
+    /**
      * Whether or not the defined proxy should be used when connecting to Nexus.
      */
     private Boolean nexusUsesProxy;
@@ -127,14 +130,6 @@ public class Check extends Update {
      * The path to Mono for .NET assembly analysis on non-windows systems.
      */
     private String pathToMono;
-
-    /**
-     * The application name for the report.
-     *
-     * @deprecated use projectName instead.
-     */
-    @Deprecated
-    private String applicationName = null;
     /**
      * The name of the project being analyzed.
      */
@@ -157,14 +152,6 @@ public class Check extends Update {
      * recommended that this be turned to false. Default is true.
      */
     private Boolean autoUpdate;
-    /**
-     * Whether only the update phase should be executed.
-     *
-     * @deprecated Use the update task instead
-     */
-    @Deprecated
-    private boolean updateOnly = false;
-
     /**
      * The report format to be generated (HTML, XML, VULN, CSV, JSON, ALL).
      * Default is HTML.
@@ -208,6 +195,10 @@ public class Check extends Update {
      * Whether or not the .NET Nuspec Analyzer is enabled.
      */
     private Boolean nuspecAnalyzerEnabled;
+    /**
+     * Whether or not the .NET Nuget packages.config file Analyzer is enabled.
+     */
+    private Boolean nugetconfAnalyzerEnabled;
     /**
      * Whether or not the PHP Composer Analyzer is enabled.
      */
@@ -374,39 +365,13 @@ public class Check extends Update {
     }
 
     /**
-     * Get the value of applicationName.
-     *
-     * @return the value of applicationName
-     *
-     * @deprecated use projectName instead.
-     */
-    @Deprecated
-    public String getApplicationName() {
-        return applicationName;
-    }
-
-    /**
-     * Set the value of applicationName.
-     *
-     * @param applicationName new value of applicationName
-     * @deprecated use projectName instead.
-     */
-    @Deprecated
-    public void setApplicationName(String applicationName) {
-        this.applicationName = applicationName;
-    }
-
-    /**
      * Get the value of projectName.
      *
      * @return the value of projectName
      */
     public String getProjectName() {
-        if (applicationName != null) {
-            log("Configuration 'applicationName' has been deprecated, please use 'projectName' instead", Project.MSG_WARN);
-            if ("dependency-check".equals(projectName)) {
-                projectName = applicationName;
-            }
+        if (projectName == null) {
+            projectName = "";
         }
         return projectName;
     }
@@ -472,28 +437,6 @@ public class Check extends Update {
      */
     public void setAutoUpdate(Boolean autoUpdate) {
         this.autoUpdate = autoUpdate;
-    }
-
-    /**
-     * Get the value of updateOnly.
-     *
-     * @return the value of updateOnly
-     * @deprecated Use the update task instead
-     */
-    @Deprecated
-    public boolean isUpdateOnly() {
-        return updateOnly;
-    }
-
-    /**
-     * Set the value of updateOnly.
-     *
-     * @param updateOnly new value of updateOnly
-     * @deprecated Use the update task instead
-     */
-    @Deprecated
-    public void setUpdateOnly(boolean updateOnly) {
-        this.updateOnly = updateOnly;
     }
 
     /**
@@ -669,12 +612,30 @@ public class Check extends Update {
     }
 
     /**
+     * Returns whether or not the analyzer is enabled.
+     *
+     * @return true if the analyzer is enabled
+     */
+    public Boolean isNugetconfAnalyzerEnabled() {
+        return nugetconfAnalyzerEnabled;
+    }
+
+    /**
      * Sets whether or not the analyzer is enabled.
      *
      * @param nuspecAnalyzerEnabled the value of the new setting
      */
     public void setNuspecAnalyzerEnabled(Boolean nuspecAnalyzerEnabled) {
         this.nuspecAnalyzerEnabled = nuspecAnalyzerEnabled;
+    }
+
+    /**
+     * Sets whether or not the analyzer is enabled.
+     *
+     * @param nugetconfAnalyzerEnabled the value of the new setting
+     */
+    public void setNugetconfAnalyzerEnabled(Boolean nugetconfAnalyzerEnabled) {
+        this.nugetconfAnalyzerEnabled = nugetconfAnalyzerEnabled;
     }
 
     /**
@@ -842,21 +803,50 @@ public class Check extends Update {
     }
 
     /**
-     * Get the value of nspAnalyzerEnabled.
+     * Get the value of nodeAnalyzerEnabled.
      *
-     * @return the value of nspAnalyzerEnabled
+     * @return the value of nodeAnalyzerEnabled
+     *
+     * @deprecated As of release 3.3.3, replaced by
+     * {@link #isNodeAuditAnalyzerEnabled()}
      */
+    @Deprecated
     public Boolean isNspAnalyzerEnabled() {
-        return nspAnalyzerEnabled;
+        log("The NspAnalyzerEnabled configuration has been deprecated and replaced by NodeAuditAnalyzerEnabled", Project.MSG_ERR);
+        log("The NspAnalyzerEnabled configuration will be removed in the next major release");
+        return nodeAnalyzerEnabled;
     }
 
     /**
-     * Set the value of nspAnalyzerEnabled.
+     * Set the value of nodeAnalyzerEnabled.
      *
-     * @param nspAnalyzerEnabled new value of nspAnalyzerEnabled
+     * @param nodeAnalyzerEnabled new value of nodeAnalyzerEnabled
+     * @deprecated As of release 3.3.3, replaced by
+     * {@link #setNodeAuditAnalyzerEnabled(java.lang.Boolean)}
      */
-    public void setNspAnalyzerEnabled(Boolean nspAnalyzerEnabled) {
-        this.nspAnalyzerEnabled = nspAnalyzerEnabled;
+    @Deprecated
+    public void setNspAnalyzerEnabled(Boolean nodeAnalyzerEnabled) {
+        log("The NspAnalyzerEnabled configuration has been deprecated and replaced by NodeAuditAnalyzerEnabled", Project.MSG_ERR);
+        log("The NspAnalyzerEnabled configuration will be removed in the next major release");
+        this.nodeAnalyzerEnabled = nodeAnalyzerEnabled;
+    }
+
+    /**
+     * Get the value of nodeAuditAnalyzerEnabled.
+     *
+     * @return the value of nodeAuditAnalyzerEnabled
+     */
+    public Boolean isNodeAuditAnalyzerEnabled() {
+        return nodeAuditAnalyzerEnabled;
+    }
+
+    /**
+     * Set the value of nodeAuditAnalyzerEnabled.
+     *
+     * @param nodeAuditAnalyzerEnabled new value of nodeAuditAnalyzerEnabled
+     */
+    public void setNodeAuditAnalyzerEnabled(Boolean nodeAuditAnalyzerEnabled) {
+        this.nodeAuditAnalyzerEnabled = nodeAuditAnalyzerEnabled;
     }
 
     /**
@@ -1024,6 +1014,42 @@ public class Check extends Update {
      */
     public void setNexusUrl(String nexusUrl) {
         this.nexusUrl = nexusUrl;
+    }
+
+    /**
+     * Get the value of nexusUser.
+     *
+     * @return the value of nexusUser
+     */
+    public String getNexusUser() {
+        return nexusUser;
+    }
+
+    /**
+     * Set the value of nexusUser.
+     *
+     * @param nexusUser new value of nexusUser
+     */
+    public void setNexusUser(String nexusUser) {
+        this.nexusUser = nexusUser;
+    }
+
+    /**
+     * Get the value of nexusPassword.
+     *
+     * @return the value of nexusPassword
+     */
+    public String getNexusPassword() {
+        return nexusPassword;
+    }
+
+    /**
+     * Set the value of nexusPassword.
+     *
+     * @param nexusPassword new value of nexusPassword
+     */
+    public void setNexusPassword(String nexusPassword) {
+        this.nexusPassword = nexusPassword;
     }
 
     /**
@@ -1263,42 +1289,30 @@ public class Check extends Update {
         validateConfiguration();
         populateSettings();
         try (Engine engine = new Engine(Check.class.getClassLoader(), getSettings())) {
-            if (isUpdateOnly()) {
-                log("Deprecated 'UpdateOnly' property set; please use the UpdateTask instead", Project.MSG_WARN);
-                try {
-                    engine.doUpdates();
-                } catch (UpdateException ex) {
-                    if (this.isFailOnError()) {
-                        throw new BuildException(ex);
-                    }
-                    log(ex.getMessage(), Project.MSG_ERR);
-                }
-            } else {
-                for (Resource resource : getPath()) {
-                    final FileProvider provider = resource.as(FileProvider.class);
-                    if (provider != null) {
-                        final File file = provider.getFile();
-                        if (file != null && file.exists()) {
-                            engine.scan(file);
-                        }
+            for (Resource resource : getPath()) {
+                final FileProvider provider = resource.as(FileProvider.class);
+                if (provider != null) {
+                    final File file = provider.getFile();
+                    if (file != null && file.exists()) {
+                        engine.scan(file);
                     }
                 }
+            }
 
-                try {
-                    engine.analyzeDependencies();
-                } catch (ExceptionCollection ex) {
-                    if (this.isFailOnError()) {
-                        throw new BuildException(ex);
-                    }
+            try {
+                engine.analyzeDependencies();
+            } catch (ExceptionCollection ex) {
+                if (this.isFailOnError()) {
+                    throw new BuildException(ex);
                 }
-                engine.writeReports(getProjectName(), new File(reportOutputDirectory), reportFormat);
+            }
+            engine.writeReports(getProjectName(), new File(reportOutputDirectory), reportFormat);
 
-                if (this.failBuildOnCVSS <= 10) {
-                    checkForFailure(engine.getDependencies());
-                }
-                if (this.showSummary) {
-                    showSummary(engine.getDependencies());
-                }
+            if (this.failBuildOnCVSS <= 10) {
+                checkForFailure(engine.getDependencies());
+            }
+            if (this.showSummary) {
+                DependencyCheckScanAgent.showSummary(engine.getDependencies());
             }
         } catch (DatabaseException ex) {
             final String msg = "Unable to connect to the dependency-check database; analysis has stopped";
@@ -1369,17 +1383,20 @@ public class Check extends Update {
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_AUTOCONF_ENABLED, autoconfAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_COMPOSER_LOCK_ENABLED, composerAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NODE_PACKAGE_ENABLED, nodeAnalyzerEnabled);
-        getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NSP_PACKAGE_ENABLED, nspAnalyzerEnabled);
+        getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NODE_AUDIT_ENABLED, nodeAuditAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_RETIREJS_ENABLED, retireJsAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_RETIREJS_FILTER_NON_VULNERABLE, retirejsFilterNonVulnerable);
         getSettings().setArrayIfNotEmpty(Settings.KEYS.ANALYZER_RETIREJS_FILTERS, retirejsFilters);
 
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NUSPEC_ENABLED, nuspecAnalyzerEnabled);
+        getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NUGETCONF_ENABLED, nugetconfAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_CENTRAL_ENABLED, centralAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NEXUS_ENABLED, nexusAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_ARCHIVE_ENABLED, archiveAnalyzerEnabled);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_ASSEMBLY_ENABLED, assemblyAnalyzerEnabled);
         getSettings().setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_URL, nexusUrl);
+        getSettings().setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_USER, nexusUser);
+        getSettings().setStringIfNotEmpty(Settings.KEYS.ANALYZER_NEXUS_PASSWORD, nexusPassword);
         getSettings().setBooleanIfNotNull(Settings.KEYS.ANALYZER_NEXUS_USES_PROXY, nexusUsesProxy);
         getSettings().setStringIfNotEmpty(Settings.KEYS.ADDITIONAL_ZIP_EXTENSIONS, zipExtensions);
         getSettings().setStringIfNotEmpty(Settings.KEYS.ANALYZER_ASSEMBLY_MONO_PATH, pathToMono);
@@ -1399,7 +1416,8 @@ public class Check extends Update {
         final StringBuilder ids = new StringBuilder();
         for (Dependency d : dependencies) {
             for (Vulnerability v : d.getVulnerabilities()) {
-                if (v.getCvssScore() >= failBuildOnCVSS) {
+                if ((v.getCvssV2() != null && v.getCvssV2().getScore() >= failBuildOnCVSS) ||
+                        (v.getCvssV3() != null && v.getCvssV3().getBaseScore() >= failBuildOnCVSS)) {
                     if (ids.length() == 0) {
                         ids.append(v.getName());
                     } else {
@@ -1420,47 +1438,6 @@ public class Check extends Update {
                         + "See the dependency-check report for more details.%n%n");
             }
             throw new BuildException(msg);
-        }
-    }
-
-    /**
-     * Generates a warning message listing a summary of dependencies and their
-     * associated CPE and CVE entries.
-     *
-     * @param dependencies a list of dependency objects
-     */
-    private void showSummary(Dependency[] dependencies) {
-        final StringBuilder summary = new StringBuilder();
-        for (Dependency d : dependencies) {
-            boolean firstEntry = true;
-            final StringBuilder ids = new StringBuilder();
-            for (Vulnerability v : d.getVulnerabilities(true)) {
-                if (firstEntry) {
-                    firstEntry = false;
-                } else {
-                    ids.append(", ");
-                }
-                ids.append(v.getName());
-            }
-            if (ids.length() > 0) {
-                summary.append(d.getFileName()).append(" (");
-                firstEntry = true;
-                for (Identifier id : d.getIdentifiers()) {
-                    if (firstEntry) {
-                        firstEntry = false;
-                    } else {
-                        summary.append(", ");
-                    }
-                    summary.append(id.getValue());
-                }
-                summary.append(") : ").append(ids).append(NEW_LINE);
-            }
-        }
-        if (summary.length() > 0) {
-            final String msg = String.format("%n%n"
-                    + "One or more dependencies were identified with known vulnerabilities:%n%n%s"
-                    + "%n%nSee the dependency-check report for more details.%n%n", summary.toString());
-            log(msg, Project.MSG_WARN);
         }
     }
 

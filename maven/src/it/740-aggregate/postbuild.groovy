@@ -26,9 +26,15 @@ if (count == 0) {
     System.out.println(String.format("fourth-1.0.0-SNAPSHOT was not identified"));
     return false;
 }
-count = StringUtils.countMatches(report, "org.apache.james:apache-mime4j-core:0.7.2");
+count = StringUtils.countMatches(report, "pkg:maven/org.apache.james/apache-mime4j-core@0.7.2");
 if (count == 0) {
-    System.out.println(String.format("org.apache.james:apache-mime4j-core:0.7.2 was not identified and is a dependency of fourth-1.0.0-SNAPSHOT"));
+    System.out.println("org.apache.james:apache-mime4j-core:0.7.2 was not identified and is a dependency of fourth-1.0.0-SNAPSHOT");
     return false;
 }
+count = StringUtils.countMatches(report, "HelloWorld.js");
+if (count == 0) {
+    System.out.println("HelloWorld.js was not included via ScanSet and is found in `second/srt/test`");
+    return false;
+}
+
 return true;

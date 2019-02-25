@@ -76,8 +76,6 @@ public class CMakeAnalyzerTest extends BaseDBTestCase {
     public void tearDown() throws Exception {
         try {
             analyzer.close();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
         } finally {
             super.tearDown();
         }

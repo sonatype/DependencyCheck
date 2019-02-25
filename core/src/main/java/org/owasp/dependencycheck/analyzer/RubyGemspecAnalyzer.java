@@ -17,6 +17,9 @@
  */
 package org.owasp.dependencycheck.analyzer;
 
+import com.github.packageurl.MalformedPackageURLException;
+import com.github.packageurl.PackageURL;
+import com.github.packageurl.PackageURLBuilder;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
@@ -33,6 +36,8 @@ import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
 import org.owasp.dependencycheck.dependency.Confidence;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.EvidenceType;
+import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
+import org.owasp.dependencycheck.dependency.naming.PurlIdentifier;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.FileFilterBuilder;
 import org.owasp.dependencycheck.utils.Settings;
@@ -54,7 +59,7 @@ public class RubyGemspecAnalyzer extends AbstractFileTypeAnalyzer {
      * A descriptor for the type of dependencies processed or added by this
      * analyzer.
      */
-    public static final String DEPENDENCY_ECOSYSTEM = "Ruby.Bundle";
+    public static final String DEPENDENCY_ECOSYSTEM = RubyBundleAuditAnalyzer.DEPENDENCY_ECOSYSTEM;
     /**
      * The logger.
      */
@@ -83,6 +88,11 @@ public class RubyGemspecAnalyzer extends AbstractFileTypeAnalyzer {
      * The name of the version file.
      */
     private static final String VERSION_FILE_NAME = "VERSION";
+
+    /**
+     * The capture group #1 is the block variable.
+     */
+    private static final Pattern GEMSPEC_BLOCK_INIT = Pattern.compile("Gem::Specification\\.new\\s+?do\\s+?\\|(.+?)\\|");
 
     /**
      * @return a filter that accepts files matching the glob pattern, *.gemspec
@@ -128,11 +138,6 @@ public class RubyGemspecAnalyzer extends AbstractFileTypeAnalyzer {
         return Settings.KEYS.ANALYZER_RUBY_GEMSPEC_ENABLED;
     }
 
-    /**
-     * The capture group #1 is the block variable.
-     */
-    private static final Pattern GEMSPEC_BLOCK_INIT = Pattern.compile("Gem::Specification\\.new\\s+?do\\s+?\\|(.+?)\\|");
-
     @Override
     protected void analyzeDependency(Dependency dependency, Engine engine) throws AnalysisException {
         dependency.setEcosystem(DEPENDENCY_ECOSYSTEM);
@@ -153,14 +158,19 @@ public class RubyGemspecAnalyzer extends AbstractFileTypeAnalyzer {
                 dependency.addEvidence(EvidenceType.VENDOR, GEMSPEC, "name_project", name + "_project", Confidence.LOW);
                 dependency.setName(name);
             }
-            final String description = addStringEvidence(dependency, EvidenceType.PRODUCT, contents, blockVariable, "summary", "summary", Confidence.LOW);
+            final String description = addStringEvidence(dependency, EvidenceType.PRODUCT, contents, blockVariable,
+                    "summary", "summary", Confidence.LOW);
             if (description != null && !description.isEmpty()) {
                 dependency.setDescription(description);
             }
-            addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable, "author", "authors?", Confidence.HIGHEST);
-            addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable, "email", "emails?", Confidence.MEDIUM);
-            addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable, "homepage", "homepage", Confidence.HIGHEST);
-            final String license = addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable, "license", "licen[cs]es?", Confidence.HIGHEST);
+            addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable,
+                    "author", "authors?", Confidence.HIGHEST);
+            addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable,
+                    "email", "emails?", Confidence.MEDIUM);
+            addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable,
+                    "homepage", "homepage", Confidence.HIGHEST);
+            final String license = addStringEvidence(dependency, EvidenceType.VENDOR, contents, blockVariable,
+                    "license", "licen[cs]es?", Confidence.HIGHEST);
             if (license != null && !license.isEmpty()) {
                 dependency.setLicense(license);
             }
@@ -175,9 +185,28 @@ public class RubyGemspecAnalyzer extends AbstractFileTypeAnalyzer {
                 dependency.setVersion(value);
             }
         }
-        if (dependency.getName()!=null && dependency.getVersion()!=null) {
+        if (dependency.getName() != null && dependency.getVersion() != null) {
             dependency.setDisplayFileName(String.format("%s:%s", dependency.getName(), dependency.getVersion()));
         }
+
+        try {
+            final PackageURLBuilder builder = PackageURLBuilder.aPackageURL().withType("gem").withName(dependency.getName());
+            if (dependency.getVersion() != null) {
+                builder.withVersion(dependency.getVersion());
+            }
+            final PackageURL purl = builder.build();
+            dependency.addSoftwareIdentifier(new PurlIdentifier(purl, Confidence.HIGHEST));
+        } catch (MalformedPackageURLException ex) {
+            LOGGER.debug("Unable to build package url for python", ex);
+            final GenericIdentifier id;
+            if (dependency.getVersion() != null) {
+                id = new GenericIdentifier("gem:" + dependency.getName() + "@" + dependency.getVersion(), Confidence.HIGHEST);
+            } else {
+                id = new GenericIdentifier("gem:" + dependency.getName(), Confidence.HIGHEST);
+            }
+            dependency.addSoftwareIdentifier(id);
+        }
+
         setPackagePath(dependency);
     }
 

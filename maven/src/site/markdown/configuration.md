@@ -28,6 +28,7 @@ skipProvidedScope           | Skip analysis for artifacts with Provided Scope.  
 skipRuntimeScope            | Skip analysis for artifacts with Runtime Scope.            | false
 skipSystemScope             | Skip analysis for artifacts with System Scope.             | false
 skipTestScope               | Skip analysis for artifacts with Test Scope.               | true
+skipDependencyManagement    | Skip analysis for dependencyManagement sections.           | true
 skipArtifactType            | A regular expression used to filter/skip artifact types.   | &nbsp;
 suppressionFiles            | The file paths to the XML suppression files \- used to suppress [false positives](../general/suppression.html). | &nbsp;
 hintsFile                   | The file path to the XML hints file \- used to resolve [false negatives](../general/hints.html).       | &nbsp;
@@ -51,6 +52,7 @@ jarAnalyzerEnabled            | Sets whether Jar Analyzer will be used.         
 centralAnalyzerEnabled        | Sets whether Central Analyzer will be used. If this analyzer is being disabled there is a good chance you also want to disable the Nexus Analyzer (see below). | true
 nexusAnalyzerEnabled          | Sets whether Nexus Analyzer will be used (requires Nexus Pro). This analyzer is superceded by the Central Analyzer; however, you can configure this to run against a Nexus Pro installation. | true
 nexusUrl                      | Defines the Nexus Server's web service end point (example http://domain.enterprise/service/local/). If not set the Nexus Analyzer will be disabled. | &nbsp;
+nexusServerId                 | The id of a server defined in the settings.xml that configures the credentials (username and password) for a Nexus server's REST API end point. When not specified the communication with the Nexus server's REST API will be unauthenticated. | &nbsp;
 nexusUsesProxy                | Whether or not the defined proxy should be used when connecting to Nexus. | true
 artifactoryAnalyzerEnabled    | Sets whether Artifactory analyzer will be used | false
 artifactoryAnalyzerUrl        | The Artifactory server URL. | &nbsp;
@@ -68,9 +70,10 @@ cmakeAnalyzerEnabled          | Sets whether the [experimental](../analyzers/ind
 autoconfAnalyzerEnabled       | Sets whether the [experimental](../analyzers/index.html) autoconf Analyzer should be used.                 | true
 composerAnalyzerEnabled       | Sets whether the [experimental](../analyzers/index.html) PHP Composer Lock File Analyzer should be used.   | true
 nodeAnalyzerEnabled           | Sets whether the [retired](../analyzers/index.html) Node.js Analyzer should be used.                       | true
-nspAnalyzerEnabled            | Sets whether the NSP Analyzer should be used.                                                              | true
+nodeAuditAnalyzerEnabled      | Sets whether the Node Audit Analyzer should be used.                                                              | true
 retireJsAnalyzerEnabled       | Sets whether the [experimental](../analyzers/index.html) RetireJS Analyzer should be used.                                                         | true
 nuspecAnalyzerEnabled         | Sets whether the .NET Nuget Nuspec Analyzer will be used.                                                  | true
+nugetconfAnalyzerEnabled      | Sets whether the [experimental](../analyzers/index.html) .NET Nuget packages.config Analyzer will be used.                                         | true
 cocoapodsAnalyzerEnabled      | Sets whether the [experimental](../analyzers/index.html) Cocoapods Analyzer should be used.                | true
 bundleAuditAnalyzerEnabled    | Sets whether the [experimental](../analyzers/index.html) Bundle Audit Analyzer should be used.             | true
 bundleAuditPath               | Sets the path to the bundle audit executable; only used if bundle audit analyzer is enabled and experimental analyzers are enabled.  | &nbsp;
@@ -101,23 +104,20 @@ filterNonVulnerable | A boolean controlling whether or not the Retire JS Analyze
 Advanced Configuration
 ====================
 The following properties can be configured in the plugin. However, they are less frequently changed. One exception
-may be the cvedUrl properties, which can be used to host a mirror of the NVD within an enterprise environment.
+may be the cveUrl properties, which can be used to host a mirror of the NVD within an enterprise environment.
 
-Property             | Description                                                                                 | Default Value
----------------------|---------------------------------------------------------------------------------------------|------------------
-cveUrl12Modified     | URL for the modified CVE 1.2.                                                               | https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-modified.xml.gz
-cveUrl20Modified     | URL for the modified CVE 2.0.                                                               | https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-Modified.xml.gz
-cveUrl12Base         | Base URL for each year's CVE 1.2, the %d will be replaced with the year.                    | https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-%d.xml.gz
-cveUrl20Base         | Base URL for each year's CVE 2.0, the %d will be replaced with the year.                    | https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%d.xml.gz
-connectionTimeout    | Sets the URL Connection Timeout used when downloading external data.                        | &nbsp;
-dataDirectory        | Sets the data directory to hold SQL CVEs contents. This should generally not be changed.    | ~/.m2/repository/org/owasp/dependency-check-data/
-databaseDriverName   | The name of the database driver. Example: org.h2.Driver.                                    | &nbsp;
-databaseDriverPath   | The path to the database driver JAR file; only used if the driver is not in the class path. | &nbsp;
-connectionString     | The connection string used to connect to the database.                                      | &nbsp;
-serverId             | The id of a server defined in the settings.xml; this can be used to encrypt the database password. See [password encryption](http://maven.apache.org/guides/mini/guide-encryption.html) for more information. | &nbsp;
-databaseUser         | The username used when connecting to the database.                                          | &nbsp;
-databasePassword     | The password used when connecting to the database.                                          | &nbsp;
-metaFileName         | Sets the name of the file to use for storing the metadata about the project.                | dependency-check.ser
+Property             | Description                                                                                 | Default Value                                                       |
+---------------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+cveUrlModified       | URL for the modified CVE JSON data feed.                                                    | https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz |
+cveUrlBase           | Base URL for each year's CVE JSON data feed, the %d will be replaced with the year.         | https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz       |
+connectionTimeout    | Sets the URL Connection Timeout used when downloading external data.                        | &nbsp;                                                              |
+dataDirectory        | Sets the data directory to hold SQL CVEs contents. This should generally not be changed.    | ~/.m2/repository/org/owasp/dependency-check-data/                   |
+databaseDriverName   | The name of the database driver. Example: org.h2.Driver.                                    | &nbsp;                                                              |
+databaseDriverPath   | The path to the database driver JAR file; only used if the driver is not in the class path. | &nbsp;                                                              |
+connectionString     | The connection string used to connect to the database.                                      | &nbsp;                                                              |
+serverId             | The id of a server defined in the settings.xml; this can be used to encrypt the database password. See [password encryption](http://maven.apache.org/guides/mini/guide-encryption.html) for more information. | &nbsp; |
+databaseUser         | The username used when connecting to the database.                                          | &nbsp;                                                              |
+databasePassword     | The password used when connecting to the database.                                          | &nbsp;                                                              |
 
 Proxy Configuration
 ====================
@@ -125,7 +125,6 @@ Use [Maven's settings](https://maven.apache.org/settings.html#Proxies) to config
 dependency-check [proxy configuration](../data/proxy.html) page for additional problem solving techniques. If multiple proxies
 are configured in the Maven settings file you must tell dependency-check which proxy to use with the following property:
 
-Property             | Description                                                                          | Default Value
----------------------|--------------------------------------------------------------------------------------|------------------
-mavenSettingsProxyId | The id for the proxy, configured via settings.xml, that dependency-check should use. | &nbsp;
-
+Property             | Description                                                                          | Default Value |
+---------------------|--------------------------------------------------------------------------------------|---------------|
+mavenSettingsProxyId | The id for the proxy, configured via settings.xml, that dependency-check should use. | &nbsp;        |

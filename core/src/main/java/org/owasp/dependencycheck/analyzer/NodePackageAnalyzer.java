@@ -117,10 +117,10 @@ public class NodePackageAnalyzer extends AbstractNpmAnalyzer {
                 if (tmp != null) {
                     final List<String> skipEcosystems = Arrays.asList(tmp);
                     if (skipEcosystems.contains(DEPENDENCY_ECOSYSTEM)
-                            && !settings.getBoolean(Settings.KEYS.ANALYZER_NSP_PACKAGE_ENABLED)) {
+                            && !settings.getBoolean(Settings.KEYS.ANALYZER_NODE_AUDIT_ENABLED)) {
                         LOGGER.debug("NodePackageAnalyzer enabled without a corresponding vulnerability analyzer");
                         final String msg = "Invalid Configuration: enabling the Node Package Analyzer without "
-                                + "using the NSP Analyzer is not supported.";
+                                + "using the Node Audit Analyzer is not supported.";
                         throw new InitializationException(msg);
                     } else if (!skipEcosystems.contains(DEPENDENCY_ECOSYSTEM)) {
                         LOGGER.warn("Using the CPE Analyzer with Node.js can result in many false positives.");
@@ -163,9 +163,25 @@ public class NodePackageAnalyzer extends AbstractNpmAnalyzer {
         return Settings.KEYS.ANALYZER_NODE_PACKAGE_ENABLED;
     }
 
+    /**
+     * Determines if the Node Audit analyzer is enabled.
+     *
+     * @param engine a reference to the dependency-check engine
+     * @return <code>true</code> if the Node Audit Analyzer is enabled;
+     * otherwise <code>false</code>
+     */
+    private boolean isNodeAuditEnabled(Engine engine) {
+        for (Analyzer a : engine.getAnalyzers()) {
+            if (a instanceof NodeAuditAnalyzer) {
+                return a.isEnabled();
+            }
+        }
+        return false;
+    }
+
     @Override
     protected void analyzeDependency(Dependency dependency, Engine engine) throws AnalysisException {
-        if (!PACKAGE_JSON.equals(dependency.getFileName())) {
+        if (isNodeAuditEnabled(engine) && !PACKAGE_LOCK_JSON.equals(dependency.getFileName())) {
             engine.removeDependency(dependency);
         }
         final File dependencyFile = dependency.getActualFile();
@@ -173,7 +189,13 @@ public class NodePackageAnalyzer extends AbstractNpmAnalyzer {
             return;
         }
         final File baseDir = dependencyFile.getParentFile();
-        if (PACKAGE_LOCK_JSON.equals(dependency.getFileName())) {
+        if (PACKAGE_JSON.equals(dependency.getFileName())) {
+            final File lockfile = new File(baseDir, PACKAGE_LOCK_JSON);
+            final File shrinkwrap = new File(baseDir, SHRINKWRAP_JSON);
+            if (shrinkwrap.exists() || lockfile.exists()) {
+                return;
+            }
+        } else if (PACKAGE_LOCK_JSON.equals(dependency.getFileName())) {
             final File shrinkwrap = new File(baseDir, SHRINKWRAP_JSON);
             if (shrinkwrap.exists()) {
                 return;
@@ -193,8 +215,10 @@ public class NodePackageAnalyzer extends AbstractNpmAnalyzer {
             if (parentName.isEmpty()) {
                 return;
             }
+            dependency.setName(parentName);
             final String parentPackage;
             if (!parentVersion.isEmpty()) {
+                dependency.setVersion(parentVersion);
                 parentPackage = String.format("%s:%s", parentName, parentVersion);
             } else {
                 parentPackage = parentName;

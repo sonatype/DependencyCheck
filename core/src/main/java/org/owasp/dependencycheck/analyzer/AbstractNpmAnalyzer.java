@@ -17,6 +17,10 @@
  */
 package org.owasp.dependencycheck.analyzer;
 
+import com.github.packageurl.MalformedPackageURLException;
+import com.github.packageurl.PackageURL;
+import com.github.packageurl.PackageURL.StandardTypes;
+import com.github.packageurl.PackageURLBuilder;
 import org.owasp.dependencycheck.Engine;
 import org.owasp.dependencycheck.dependency.Confidence;
 import org.owasp.dependencycheck.dependency.Dependency;
@@ -32,8 +36,14 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
+import org.apache.commons.lang3.StringUtils;
 import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
+import org.owasp.dependencycheck.analyzer.exception.UnexpectedAnalysisException;
 import org.owasp.dependencycheck.dependency.EvidenceType;
+import org.owasp.dependencycheck.dependency.naming.GenericIdentifier;
+import org.owasp.dependencycheck.dependency.naming.Identifier;
+import org.owasp.dependencycheck.dependency.naming.PurlIdentifier;
 import org.owasp.dependencycheck.utils.Checksum;
 
 /**
@@ -72,29 +82,31 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
         boolean accept = super.accept(pathname);
         if (accept) {
             try {
-                accept |= shouldProcess(pathname);
+                accept &= shouldProcess(pathname);
             } catch (AnalysisException ex) {
-                throw new RuntimeException(ex.getMessage(), ex.getCause());
+                throw new UnexpectedAnalysisException(ex.getMessage(), ex.getCause());
             }
         }
-
         return accept;
     }
 
     /**
-     * Determines if the path contains "/node_modules/" (i.e. it is a child
-     * module. This analyzer does not scan child modules.
+     * Determines if the path contains "/node_modules/" or "/bower_components/"
+     * (i.e. it is a child module). This analyzer does not scan child modules.
      *
      * @param pathname the path to test
      * @return <code>true</code> if the path does not contain "/node_modules/"
+     * or "/bower_components/"
      * @throws AnalysisException thrown if the canonical path cannot be obtained
      * from the given file
      */
     protected boolean shouldProcess(File pathname) throws AnalysisException {
         try {
-            // Do not scan the node_modules directory
-            if (pathname.getCanonicalPath().contains(File.separator + "node_modules" + File.separator)) {
-                LOGGER.debug("Skipping analysis of node module: " + pathname.getCanonicalPath());
+            // Do not scan the node_modules (or bower_components) directory
+            String canonicalPath = pathname.getCanonicalPath();
+            if (canonicalPath.contains(File.separator + "node_modules" + File.separator)
+                    || canonicalPath.contains(File.separator + "bower_components" + File.separator)) {
+                LOGGER.debug("Skipping analysis of node/bower module: {}", canonicalPath);
                 return false;
             }
         } catch (IOException ex) {
@@ -121,11 +133,29 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
         nodeModule.setMd5sum(Checksum.getMD5Checksum(String.format("%s:%s", name, version)));
         nodeModule.addEvidence(EvidenceType.PRODUCT, "package.json", "name", name, Confidence.HIGHEST);
         nodeModule.addEvidence(EvidenceType.VENDOR, "package.json", "name", name, Confidence.HIGH);
-        nodeModule.addEvidence(EvidenceType.VERSION, "package.json", "version", version, Confidence.HIGHEST);
-        nodeModule.addProjectReference(dependency.getName() + ": " + scope);
+        if (!StringUtils.isBlank(version)) {
+            nodeModule.addEvidence(EvidenceType.VERSION, "package.json", "version", version, Confidence.HIGHEST);
+            nodeModule.setVersion(version);
+        }
+        if (dependency.getName() != null) {
+            nodeModule.addProjectReference(dependency.getName() + ": " + scope);
+        } else {
+            nodeModule.addProjectReference(dependency.getDisplayFileName() + ": " + scope);
+        }
         nodeModule.setName(name);
-        nodeModule.setVersion(version);
-        nodeModule.addIdentifier("npm", String.format("%s:%s", name, version), null, Confidence.HIGHEST);
+
+        //TODO  - we can likely create a valid CPE as a low confidence guess using cpe:2.3:a:[name]_project:[name]:[version]
+        //(and add a targetSw of npm/node)
+        Identifier id;
+        try {
+            final PackageURL purl = PackageURLBuilder.aPackageURL().withType(StandardTypes.NPM)
+                    .withName(name).withVersion(version).build();
+            id = new PurlIdentifier(purl, Confidence.HIGHEST);
+        } catch (MalformedPackageURLException ex) {
+            LOGGER.debug("Unable to generate Purl - using a generic identifier instead " + ex.getMessage());
+            id = new GenericIdentifier(String.format("npm:%s@%s", dependency.getName(), version), Confidence.HIGHEST);
+        }
+        nodeModule.addSoftwareIdentifier(id);
         return nodeModule;
     }
 
@@ -140,9 +170,9 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
      */
     protected void processPackage(Engine engine, Dependency dependency, JsonArray jsonArray, String depType) {
         final JsonObjectBuilder builder = Json.createObjectBuilder();
-        for (JsonString str : jsonArray.getValuesAs(JsonString.class)) {
+        jsonArray.getValuesAs(JsonString.class).forEach((str) -> {
             builder.add(str.toString(), "");
-        }
+        });
         final JsonObject jsonObject = builder.build();
         processPackage(engine, dependency, jsonObject, depType);
     }
@@ -158,8 +188,7 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
      */
     protected void processPackage(Engine engine, Dependency dependency, JsonObject jsonObject, String depType) {
         for (int i = 0; i < jsonObject.size(); i++) {
-            for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet()) {
-
+            jsonObject.entrySet().forEach((entry) -> {
                 final String name = entry.getKey();
                 String version = "";
                 if (entry.getValue() != null && entry.getValue().getValueType() == JsonValue.ValueType.STRING) {
@@ -172,7 +201,7 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
                 } else {
                     existing.addProjectReference(dependency.getName() + ": " + depType);
                 }
-            }
+            });
         }
     }
 
@@ -257,6 +286,7 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
                 LOGGER.warn("JSON value not string as expected: {}", value);
             }
         }
+        //TODO - if we start doing CPE analysis on node - we need to exclude description as it creates too many FP
         final String desc = addToEvidence(dependency, EvidenceType.PRODUCT, json, "description");
         dependency.setDescription(desc);
         final String vendor = addToEvidence(dependency, EvidenceType.VENDOR, json, "author");
@@ -264,7 +294,17 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
         if (version != null) {
             displayName = String.format("%s:%s", displayName, version);
             dependency.setVersion(version);
-            dependency.addIdentifier("npm", String.format("%s:%s", dependency.getName(), version), null, Confidence.HIGHEST);
+
+            Identifier id;
+            try {
+                final PackageURL purl = PackageURLBuilder.aPackageURL()
+                        .withType(StandardTypes.NPM).withName(dependency.getName()).withVersion(version).build();
+                id = new PurlIdentifier(purl, Confidence.HIGHEST);
+            } catch (MalformedPackageURLException ex) {
+                LOGGER.debug("Unable to generate Purl - using a generic identifier instead " + ex.getMessage());
+                id = new GenericIdentifier(String.format("npm:%s:%s", dependency.getName(), version), Confidence.HIGHEST);
+            }
+            dependency.addSoftwareIdentifier(id);
         }
         if (displayName != null) {
             dependency.setDisplayFileName(displayName);
@@ -291,7 +331,20 @@ public abstract class AbstractNpmAnalyzer extends AbstractFileTypeAnalyzer {
                         } else {
                             addComma = true;
                         }
-                        sb.append(array.getString(x));
+                        if (ValueType.STRING == array.get(x).getValueType()) {
+                            sb.append(array.getString(x));
+                        } else {
+                            final JsonObject lo = array.getJsonObject(x);
+                            if (lo.containsKey("type") && !lo.isNull("type")
+                                    && lo.containsKey("url") && !lo.isNull("url")) {
+                                final String license = String.format("%s (%s)", lo.getString("type"), lo.getString("url"));
+                                sb.append(license);
+                            } else if (lo.containsKey("type") && !lo.isNull("type")) {
+                                sb.append(lo.getString("type"));
+                            } else if (lo.containsKey("url") && !lo.isNull("url")) {
+                                sb.append(lo.getString("url"));
+                            }
+                        }
                     }
                 }
                 dependency.setLicense(sb.toString());

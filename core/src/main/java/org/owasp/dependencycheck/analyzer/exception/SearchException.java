@@ -20,7 +20,7 @@ package org.owasp.dependencycheck.analyzer.exception;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * An exception thrown when an online searching fails (such as NSP).
+ * An exception thrown when an online searching fails (such as NPM).
  *
  * @author Jeremy Long
  */
@@ -30,7 +30,7 @@ public class SearchException extends AnalysisException {
     /**
      * The serial version UID for serialization.
      */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -123720951452856878L;
 
     /**
      * Creates a new SearchException.

@@ -35,8 +35,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.List;
 import javax.annotation.concurrent.ThreadSafe;
+import org.owasp.dependencycheck.analyzer.exception.UnexpectedAnalysisException;
 import org.owasp.dependencycheck.dependency.EvidenceType;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.DownloadFailedException;
@@ -253,16 +255,21 @@ public class CentralAnalyzer extends AbstractFileTypeAnalyzer {
                                     Thread.sleep(sleepingTimeBetweenRetriesInMillis);
                                     sleepingTimeBetweenRetriesInMillis *= 2;
                                 } catch (InterruptedException ex1) {
-                                    throw new RuntimeException(ex1);
+                                    throw new UnexpectedAnalysisException(ex1);
                                 }
                             }
                             //CSON: NestedTryDepth
                         } while (!success && retryCount++ < maxAttempts);
-                        PomUtils.analyzePOM(dependency, pomFile);
+                        if (success) {
+                            PomUtils.analyzePOM(dependency, pomFile);
+                        } else {
+                            LOGGER.warn("Unable to download pom.xml for {} from Central; "
+                                    + "this could result in undetected CPE/CVEs.", dependency.getFileName());
+                        }
 
-                    } catch (DownloadFailedException ex) {
-                        LOGGER.warn("Unable to download pom.xml for {} from Central; "
-                                + "this could result in undetected CPE/CVEs.", dependency.getFileName());
+                    } catch (AnalysisException ex) {
+                        LOGGER.warn(MessageFormat.format("Unable to analyze pom.xml for {0} from Central; "
+                                + "this could result in undetected CPE/CVEs.", dependency.getFileName()), ex);
 
                     } finally {
                         if (pomFile != null && pomFile.exists() && !FileUtils.deleteQuietly(pomFile)) {
