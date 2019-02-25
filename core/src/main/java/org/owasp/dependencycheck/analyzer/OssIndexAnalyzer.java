@@ -20,6 +20,7 @@ import us.springett.parsers.cpe.exceptions.CpeValidationException;
 import org.sonatype.goodies.packageurl.PackageUrl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -128,7 +129,13 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
             }
         }
 
-        return client.requestComponentReports(packages);
+        // only attempt if we have been able to collect some packages
+        if (!packages.isEmpty()) {
+            return client.requestComponentReports(packages);
+        }
+
+        log.warn("Unable to determine Package-URL identifiers for {} dependencies", dependencies.length);
+        return Collections.emptyMap();
     }
 
     private void enrich(final Dependency dependency) {
