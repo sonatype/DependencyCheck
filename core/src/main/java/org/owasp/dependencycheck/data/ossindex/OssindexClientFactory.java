@@ -2,10 +2,10 @@ package org.owasp.dependencycheck.data.ossindex;
 
 import org.sonatype.ossindex.service.client.OssindexClient;
 import org.sonatype.ossindex.service.client.OssindexClientConfiguration;
-import org.sonatype.ossindex.service.client.internal.GsonMarshaller;
+import org.sonatype.ossindex.service.client.marshal.Marshaller;
+import org.sonatype.ossindex.service.client.marshal.GsonMarshaller;
 import org.sonatype.ossindex.service.client.internal.OssindexClientImpl;
 import org.sonatype.ossindex.service.client.transport.HttpUrlConnectionTransport;
-import org.sonatype.ossindex.service.client.transport.Marshaller;
 import org.sonatype.ossindex.service.client.transport.Transport;
 import org.sonatype.ossindex.service.client.transport.UserAgentSupplier;
 import org.owasp.dependencycheck.utils.Settings;
