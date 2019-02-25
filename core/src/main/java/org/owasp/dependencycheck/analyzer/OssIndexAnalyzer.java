@@ -8,12 +8,15 @@ import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
 import org.owasp.dependencycheck.data.ossindex.OssindexClientFactory;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Vulnerability;
+import org.owasp.dependencycheck.dependency.VulnerableSoftwareBuilder;
 import org.owasp.dependencycheck.dependency.naming.Identifier;
 import org.owasp.dependencycheck.dependency.naming.PurlIdentifier;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import us.springett.parsers.cpe.exceptions.CpeValidationException;
+
 import org.sonatype.goodies.packageurl.PackageUrl;
 
 import java.util.ArrayList;
@@ -174,11 +177,19 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
                 String.format("%s: %s", source.getId(), source.getTitle()),
                 source.getReference().toString());
 
-        // TODO: adapt to VulnerableSoftwareBuilder, which seems to now require a CPE
-        //VulnerableSoftware software = new VulnerableSoftware();
+        // TODO: adapt to VulnerableSoftwareBuilder, which seems to now require a CPE and version ranges :-\
+        VulnerableSoftwareBuilder software = new VulnerableSoftwareBuilder();
+
         //software.setName(report.getCoordinates().getName());
         //software.setVersion(report.getCoordinates().getVersion());
         //result.setVulnerableSoftware(Collections.singleton(software));
+
+        try {
+            result.addVulnerableSoftware(software.build());
+        }
+        catch (CpeValidationException e) {
+            log.warn("Failed to build software-identifier for: {}", source);
+        }
 
         return result;
     }
