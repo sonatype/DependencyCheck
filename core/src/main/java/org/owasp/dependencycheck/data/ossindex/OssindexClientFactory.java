@@ -24,6 +24,8 @@ public class OssindexClientFactory {
     public static OssindexClient create(final Settings settings) {
         OssindexClientConfiguration config = new OssindexClientConfiguration();
 
+        // TODO: optionally expose more settings for things like cache, etc.
+
         String baseUrl = settings.getString(Settings.KEYS.ANALYZER_OSSINDEX_URL, null);
         if (baseUrl != null) {
             config.setBaseUrl(baseUrl);
