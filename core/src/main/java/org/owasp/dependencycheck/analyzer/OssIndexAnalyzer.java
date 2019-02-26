@@ -220,6 +220,8 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         // generate a reference to the vulnerability details on OSS Index
         result.addReference(REFERENCE_TYPE, source.getTitle(), source.getReference().toString());
 
+        // TODO: add vulnerable-software details; though need to resolve how to generate a CPE and cope with version-range details
+
         return result;
     }
 }
