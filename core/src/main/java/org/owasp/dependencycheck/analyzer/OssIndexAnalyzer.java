@@ -2,7 +2,9 @@ package org.owasp.dependencycheck.analyzer;
 
 import org.sonatype.ossindex.service.api.componentreport.ComponentReport;
 import org.sonatype.ossindex.service.api.componentreport.ComponentReportVulnerability;
+import org.sonatype.ossindex.service.api.cvss.Cvss2Severity;
 import org.sonatype.ossindex.service.api.cvss.Cvss2Vector;
+import org.sonatype.ossindex.service.api.cvss.Cvss3Severity;
 import org.sonatype.ossindex.service.api.cvss.Cvss3Vector;
 import org.sonatype.ossindex.service.api.cvss.CvssVector;
 import org.sonatype.ossindex.service.api.cvss.CvssVectorFactory;
@@ -184,10 +186,6 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         float cvssScore = source.getCvssScore() != null ? source.getCvssScore() : 0f;
         if (cvssVector instanceof Cvss2Vector) {
           Map<String,String> metrics = cvssVector.getMetrics();
-
-          // FIXME: what to do here?
-          String severity = null;
-
           CvssV2 cvss2 = new CvssV2(
               cvssScore,
               metrics.get(Cvss2Vector.ACCESS_VECTOR),
@@ -196,16 +194,12 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
               metrics.get(Cvss2Vector.CONFIDENTIALITY_IMPACT),
               metrics.get(Cvss2Vector.INTEGRITY_IMPACT),
               metrics.get(Cvss2Vector.AVAILABILITY_IMPACT),
-              severity
+              Cvss2Severity.of(cvssScore).toString()
           );
           result.setCvssV2(cvss2);
         }
         else if (cvssVector instanceof Cvss3Vector) {
           Map<String,String> metrics = cvssVector.getMetrics();
-
-          // FIXME: what to do here?
-          String severity = null;
-
           CvssV3 cvss3 = new CvssV3(
               metrics.get(Cvss3Vector.ATTACK_VECTOR),
               metrics.get(Cvss3Vector.ATTACK_COMPLEXITY),
@@ -216,7 +210,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
               metrics.get(Cvss3Vector.INTEGRITY_IMPACT),
               metrics.get(Cvss3Vector.AVAILABILITY_IMPACT),
               cvssScore,
-              severity
+              Cvss3Severity.of(cvssScore).toString()
           );
           result.setCvssV3(cvss3);
         }
