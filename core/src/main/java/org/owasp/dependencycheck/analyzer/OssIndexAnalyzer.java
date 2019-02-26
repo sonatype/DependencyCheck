@@ -184,9 +184,9 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         // convert cvss details
         CvssVector cvssVector = CvssVectorFactory.create(source.getCvssVector());
         float cvssScore = source.getCvssScore() != null ? source.getCvssScore() : 0f;
+        Map<String,String> metrics = cvssVector.getMetrics();
         if (cvssVector instanceof Cvss2Vector) {
-          Map<String,String> metrics = cvssVector.getMetrics();
-          CvssV2 cvss2 = new CvssV2(
+          result.setCvssV2(new CvssV2(
               cvssScore,
               metrics.get(Cvss2Vector.ACCESS_VECTOR),
               metrics.get(Cvss2Vector.ACCESS_COMPLEXITY),
@@ -195,12 +195,10 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
               metrics.get(Cvss2Vector.INTEGRITY_IMPACT),
               metrics.get(Cvss2Vector.AVAILABILITY_IMPACT),
               Cvss2Severity.of(cvssScore).toString()
-          );
-          result.setCvssV2(cvss2);
+          ));
         }
         else if (cvssVector instanceof Cvss3Vector) {
-          Map<String,String> metrics = cvssVector.getMetrics();
-          CvssV3 cvss3 = new CvssV3(
+          result.setCvssV3(new CvssV3(
               metrics.get(Cvss3Vector.ATTACK_VECTOR),
               metrics.get(Cvss3Vector.ATTACK_COMPLEXITY),
               metrics.get(Cvss3Vector.PRIVILEGES_REQUIRED),
@@ -211,8 +209,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
               metrics.get(Cvss3Vector.AVAILABILITY_IMPACT),
               cvssScore,
               Cvss3Severity.of(cvssScore).toString()
-          );
-          result.setCvssV3(cvss3);
+          ));
         }
         else {
           log.warn("Unsupported CVSS vector: {}", cvssVector);
