@@ -91,8 +91,12 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
     @Override
     protected void closeAnalyzer() throws Exception {
+        if (client != null) {
+            client.close();
+        }
         client = null;
         reports = null;
+        failed = false;
     }
 
     @Override
