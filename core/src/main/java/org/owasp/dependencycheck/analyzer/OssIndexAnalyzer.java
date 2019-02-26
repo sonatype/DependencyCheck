@@ -183,7 +183,10 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
         // convert cvss details
         CvssVector cvssVector = CvssVectorFactory.create(source.getCvssVector());
+
+        // FIXME: check the actual nullability of this; maybe left over from history and could be simplified to non-nullable
         float cvssScore = source.getCvssScore() != null ? source.getCvssScore() : 0f;
+
         Map<String,String> metrics = cvssVector.getMetrics();
         if (cvssVector instanceof Cvss2Vector) {
           result.setCvssV2(new CvssV2(
