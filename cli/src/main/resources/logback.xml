@@ -4,13 +4,13 @@
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <Target>System.out</Target>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>${dependencycheck.logging.console.level:-INFO}</level>
+            <level>INFO</level>
         </filter>
         <encoder>
-            <pattern>${dependencycheck.logging.console.pattern:-[%level] %msg%n}</pattern>
+            <pattern>[%level] %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="${dependencycheck.logging.root.level:-INFO}">
+    <root level="DEBUG">
         <appender-ref ref="console"/>
     </root>
 </configuration>

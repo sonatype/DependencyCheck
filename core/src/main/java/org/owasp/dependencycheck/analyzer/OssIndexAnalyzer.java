@@ -177,7 +177,10 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     private Vulnerability transform(final ComponentReport report, final ComponentReportVulnerability source) {
         Vulnerability result = new Vulnerability();
         result.setSource(Vulnerability.Source.OSSINDEX);
-        result.setName(source.getCve());
+
+        String name = source.getCve() != null ? source.getCve() : source.getId();
+        result.setName(name);
+
         result.setDescription(source.getDescription());
         result.addCwe(source.getCwe());
 
@@ -217,9 +220,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         }
 
         // generate a reference to the vulnerability details on OSS Index
-        result.addReference(REFERENCE_TYPE,
-                String.format("%s: %s", source.getCve(), source.getTitle()),
-                source.getReference().toString());
+        result.addReference(REFERENCE_TYPE, source.getTitle(), source.getReference().toString());
 
         // TODO: adapt to VulnerableSoftwareBuilder, which seems to now require a CPE and version ranges :-\
         VulnerableSoftwareBuilder software = new VulnerableSoftwareBuilder();
