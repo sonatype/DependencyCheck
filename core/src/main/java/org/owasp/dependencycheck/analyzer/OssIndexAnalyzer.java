@@ -2,10 +2,16 @@ package org.owasp.dependencycheck.analyzer;
 
 import org.sonatype.ossindex.service.api.componentreport.ComponentReport;
 import org.sonatype.ossindex.service.api.componentreport.ComponentReportVulnerability;
+import org.sonatype.ossindex.service.api.cvss.Cvss2Vector;
+import org.sonatype.ossindex.service.api.cvss.Cvss3Vector;
+import org.sonatype.ossindex.service.api.cvss.CvssVector;
+import org.sonatype.ossindex.service.api.cvss.CvssVectorFactory;
 import org.sonatype.ossindex.service.client.OssindexClient;
 import org.owasp.dependencycheck.Engine;
 import org.owasp.dependencycheck.analyzer.exception.AnalysisException;
 import org.owasp.dependencycheck.data.ossindex.OssindexClientFactory;
+import org.owasp.dependencycheck.dependency.CvssV2;
+import org.owasp.dependencycheck.dependency.CvssV3;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Vulnerability;
 import org.owasp.dependencycheck.dependency.VulnerableSoftwareBuilder;
@@ -173,11 +179,50 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         result.setDescription(source.getDescription());
         result.addCwe(source.getCwe());
 
-        // TODO: adapt to CvssV2 and CvssV3
-        //if (source.getCvssScore() != null) {
-        //    result.setCvssScore(source.getCvssScore());
-        //}
-        //result.setCvssAccessVector(source.getCvssVector());
+        // convert cvss details
+        CvssVector cvssVector = CvssVectorFactory.create(source.getCvssVector());
+        float cvssScore = source.getCvssScore() != null ? source.getCvssScore() : 0f;
+        if (cvssVector instanceof Cvss2Vector) {
+          Map<String,String> metrics = cvssVector.getMetrics();
+
+          // FIXME: what to do here?
+          String severity = null;
+
+          CvssV2 cvss2 = new CvssV2(
+              cvssScore,
+              metrics.get(Cvss2Vector.ACCESS_VECTOR),
+              metrics.get(Cvss2Vector.ACCESS_COMPLEXITY),
+              metrics.get(Cvss2Vector.AUTHENTICATION),
+              metrics.get(Cvss2Vector.CONFIDENTIALITY_IMPACT),
+              metrics.get(Cvss2Vector.INTEGRITY_IMPACT),
+              metrics.get(Cvss2Vector.AVAILABILITY_IMPACT),
+              severity
+          );
+          result.setCvssV2(cvss2);
+        }
+        else if (cvssVector instanceof Cvss3Vector) {
+          Map<String,String> metrics = cvssVector.getMetrics();
+
+          // FIXME: what to do here?
+          String severity = null;
+
+          CvssV3 cvss3 = new CvssV3(
+              metrics.get(Cvss3Vector.ATTACK_VECTOR),
+              metrics.get(Cvss3Vector.ATTACK_COMPLEXITY),
+              metrics.get(Cvss3Vector.PRIVILEGES_REQUIRED),
+              metrics.get(Cvss3Vector.USER_INTERACTION),
+              metrics.get(Cvss3Vector.SCOPE),
+              metrics.get(Cvss3Vector.CONFIDENTIALITY_IMPACT),
+              metrics.get(Cvss3Vector.INTEGRITY_IMPACT),
+              metrics.get(Cvss3Vector.AVAILABILITY_IMPACT),
+              cvssScore,
+              severity
+          );
+          result.setCvssV3(cvss3);
+        }
+        else {
+          log.warn("Unsupported CVSS vector: {}", cvssVector);
+        }
 
         // generate a reference to the vulnerability details on OSS Index
         result.addReference(REFERENCE_TYPE,
