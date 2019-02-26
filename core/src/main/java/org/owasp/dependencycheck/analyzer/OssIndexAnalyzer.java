@@ -30,6 +30,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * Enrich dependency information from Sonatype OSS index.
  *
@@ -119,6 +121,20 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     }
 
     /**
+     * Helper to complain if unable to parse Package-URL.
+     */
+    @Nullable
+    private PackageUrl parsePackageUrl(final String value) {
+        try {
+            return PackageUrl.parse(value);
+        }
+        catch (PackageUrl.InvalidException e) {
+            log.warn("Invalid Package-URL: {}", value, e);
+            return null;
+        }
+    }
+
+    /**
      * Batch request package-reports for all dependencies.
      */
     private Map<PackageUrl, ComponentReport> requestReports(final Dependency[] dependencies) throws Exception {
@@ -129,8 +145,10 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         for (Dependency dependency : dependencies) {
             for (Identifier id : dependency.getSoftwareIdentifiers()) {
                 if (id instanceof PurlIdentifier) {
-                    PackageUrl purl = PackageUrl.parse(id.getValue());
-                    packages.add(purl);
+                    PackageUrl purl = parsePackageUrl(id.getValue());
+                    if (purl != null) {
+                        packages.add(purl);
+                    }
                 }
             }
         }
@@ -151,22 +169,24 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
             if (id instanceof PurlIdentifier) {
                 log.debug("  Package: {} -> {}", id, id.getConfidence());
 
-                PackageUrl purl = PackageUrl.parse(id.getValue());
-                try {
-                    ComponentReport report = reports.get(purl);
-                    if (report == null) {
-                        throw new IllegalStateException("Missing package-report for: " + purl);
-                    }
+                PackageUrl purl = parsePackageUrl(id.getValue());
+                if (purl != null) {
+                    try {
+                        ComponentReport report = reports.get(purl);
+                        if (report == null) {
+                            throw new IllegalStateException("Missing package-report for: " + purl);
+                        }
 
-                    // expose the URL to the package details for report generation
-                    id.setUrl(report.getReference().toString());
+                        // expose the URL to the package details for report generation
+                        id.setUrl(report.getReference().toString());
 
-                    for (ComponentReportVulnerability vuln : report.getVulnerabilities()) {
-                        dependency.addVulnerability(transform(report, vuln));
+                        for (ComponentReportVulnerability vuln : report.getVulnerabilities()) {
+                            dependency.addVulnerability(transform(report, vuln));
+                        }
                     }
-                }
-                catch (Exception e) {
-                    log.warn("Failed to fetch package-report for: {}", purl, e);
+                    catch (Exception e) {
+                        log.warn("Failed to fetch package-report for: {}", purl, e);
+                    }
                 }
             }
         }
