@@ -101,7 +101,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
             throw new IllegalStateException();
         }
 
-        // batch request package-reports for all dependencies
+        // batch request component-reports for all dependencies
         synchronized (fetchMutex) {
             if (!failed && reports == null) {
                 try {
@@ -109,7 +109,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
                 }
                 catch (Exception e) {
                     failed = true;
-                    throw new AnalysisException("Failed to request package-reports", e);
+                    throw new AnalysisException("Failed to request component-reports", e);
                 }
             }
         }
@@ -135,12 +135,12 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
     }
 
     /**
-     * Batch request package-reports for all dependencies.
+     * Batch request component-reports for all dependencies.
      */
     private Map<PackageUrl, ComponentReport> requestReports(final Dependency[] dependencies) throws Exception {
-        log.debug("Requesting package-reports for {} dependencies", dependencies.length);
+        log.debug("Requesting component-reports for {} dependencies", dependencies.length);
 
-        // create requests for each dependency which has a package-identifier
+        // create requests for each dependency which has a PURL identifier
         List<PackageUrl> packages = new ArrayList<>();
         for (Dependency dependency : dependencies) {
             for (Identifier id : dependency.getSoftwareIdentifiers()) {
@@ -162,6 +162,9 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         return Collections.emptyMap();
     }
 
+    /**
+     * Attempt to enrich given dependency with vulnerability details from OSS Index component-report.
+     */
     private void enrich(final Dependency dependency) {
         log.debug("Enrich dependency: {}", dependency);
 
@@ -174,7 +177,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
                     try {
                         ComponentReport report = reports.get(purl);
                         if (report == null) {
-                            throw new IllegalStateException("Missing package-report for: " + purl);
+                            throw new IllegalStateException("Missing component-report for: " + purl);
                         }
 
                         // expose the URL to the package details for report generation
@@ -185,20 +188,20 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
                         }
                     }
                     catch (Exception e) {
-                        log.warn("Failed to fetch package-report for: {}", purl, e);
+                        log.warn("Failed to fetch component-report for: {}", purl, e);
                     }
                 }
             }
         }
     }
 
+    /**
+     * Transform OSS Index component-report to ODC vulnerability.
+     */
     private Vulnerability transform(final ComponentReport report, final ComponentReportVulnerability source) {
         Vulnerability result = new Vulnerability();
         result.setSource(Vulnerability.Source.OSSINDEX);
-
-        String name = source.getCve() != null ? source.getCve() : source.getId();
-        result.setName(name);
-
+        result.setName(source.getCve() != null ? source.getCve() : source.getId());
         result.setDescription(source.getDescription());
         result.addCwe(source.getCwe());
 
