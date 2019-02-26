@@ -186,6 +186,9 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         CvssVector cvssVector = CvssVectorFactory.create(source.getCvssVector());
         float cvssScore = source.getCvssScore() != null ? source.getCvssScore() : -1;
 
+        // TODO: resolve if severity usage should be uppercase or not; ie name() or toString()
+        // TODO: ... looks like there is some inconsistency in ODC wrt to strings like "High" and "HIGH"
+
         Map<String,String> metrics = cvssVector.getMetrics();
         if (cvssVector instanceof Cvss2Vector) {
           result.setCvssV2(new CvssV2(
