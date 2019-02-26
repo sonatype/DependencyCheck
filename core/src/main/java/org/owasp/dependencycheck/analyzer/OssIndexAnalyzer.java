@@ -220,7 +220,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
 
         // generate a reference to the vulnerability details on OSS Index
         result.addReference(REFERENCE_TYPE,
-                String.format("%s: %s", source.getId(), source.getTitle()),
+                String.format("%s: %s", source.getCve(), source.getTitle()),
                 source.getReference().toString());
 
         // TODO: adapt to VulnerableSoftwareBuilder, which seems to now require a CPE and version ranges :-\
