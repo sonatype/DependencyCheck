@@ -199,6 +199,8 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         }
     }
 
+    // FIXME: leaving ComponentReport on this API until we can resolve if we need to and/how if needed we can attach VulnerableSoftware record.
+
     /**
      * Transform OSS Index component-report to ODC vulnerability.
      */
