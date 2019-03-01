@@ -16,12 +16,16 @@ import org.owasp.dependencycheck.dependency.CvssV2;
 import org.owasp.dependencycheck.dependency.CvssV3;
 import org.owasp.dependencycheck.dependency.Dependency;
 import org.owasp.dependencycheck.dependency.Vulnerability;
+import org.owasp.dependencycheck.dependency.VulnerableSoftware;
+import org.owasp.dependencycheck.dependency.VulnerableSoftwareBuilder;
 import org.owasp.dependencycheck.dependency.naming.Identifier;
 import org.owasp.dependencycheck.dependency.naming.PurlIdentifier;
 import org.owasp.dependencycheck.exception.InitializationException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import us.springett.parsers.cpe.exceptions.CpeValidationException;
+import us.springett.parsers.cpe.values.Part;
 
 import org.sonatype.goodies.packageurl.PackageUrl;
 
@@ -40,7 +44,7 @@ import javax.annotation.Nullable;
 public class OssIndexAnalyzer extends AbstractAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(OssIndexAnalyzer.class);
 
-    public static final String REFERENCE_TYPE = "ossindex";
+    public static final String REFERENCE_TYPE = "OSSINDEX";
 
     private OssindexClient client;
 
@@ -199,8 +203,6 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         }
     }
 
-    // FIXME: leaving ComponentReport on this API until we can resolve if we need to and/how if needed we can attach VulnerableSoftware record.
-
     /**
      * Transform OSS Index component-report to ODC vulnerability.
      */
@@ -215,9 +217,6 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         CvssVector cvssVector = CvssVectorFactory.create(source.getCvssVector());
         float cvssScore = source.getCvssScore() != null ? source.getCvssScore() : -1;
 
-        // TODO: resolve if severity usage should be uppercase or not; ie name() or toString()
-        // TODO: ... looks like there is some inconsistency in ODC wrt to strings like "High" and "HIGH"
-
         Map<String,String> metrics = cvssVector.getMetrics();
         if (cvssVector instanceof Cvss2Vector) {
           result.setCvssV2(new CvssV2(
@@ -228,7 +227,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
               metrics.get(Cvss2Vector.CONFIDENTIALITY_IMPACT),
               metrics.get(Cvss2Vector.INTEGRITY_IMPACT),
               metrics.get(Cvss2Vector.AVAILABILITY_IMPACT),
-              Cvss2Severity.of(cvssScore).toString()
+              Cvss2Severity.of(cvssScore).name()
           ));
         }
         else if (cvssVector instanceof Cvss3Vector) {
@@ -242,7 +241,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
               metrics.get(Cvss3Vector.INTEGRITY_IMPACT),
               metrics.get(Cvss3Vector.AVAILABILITY_IMPACT),
               cvssScore,
-              Cvss3Severity.of(cvssScore).toString()
+              Cvss3Severity.of(cvssScore).name()
           ));
         }
         else {
@@ -252,7 +251,24 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         // generate a reference to the vulnerability details on OSS Index
         result.addReference(REFERENCE_TYPE, source.getTitle(), source.getReference().toString());
 
-        // TODO: add vulnerable-software details; though need to resolve how to generate a CPE and cope with version-range details
+        // attach vulnerable software details as best we can
+        PackageUrl purl = report.getCoordinates();
+        try {
+            VulnerableSoftwareBuilder builder = new VulnerableSoftwareBuilder()
+                .part(Part.APPLICATION)
+                .vendor(purl.getNamespaceAsString())
+                .product(purl.getName())
+                .version(purl.getVersion());
+
+            // TODO: consider if we want/need to extract version-ranges to apply to vulnerable-software?
+
+            VulnerableSoftware software = builder.build();
+            result.addVulnerableSoftware(software);
+            result.setMatchedVulnerableSoftware(software);
+        }
+        catch (CpeValidationException e) {
+            log.warn("Unable to construct vulnerable-software for: {}", purl, e);
+        }
 
         return result;
     }
