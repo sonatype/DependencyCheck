@@ -24,7 +24,7 @@ import java.net.URL;
  */
 public class OssindexClientFactory {
     static {
-        // prefer pkg scheme vis scheme-less variant
+        // prefer pkg scheme vs scheme-less variant
         PackageUrl.RenderFlavor.setDefault(RenderFlavor.SCHEME);
     }
 
