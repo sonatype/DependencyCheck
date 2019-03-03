@@ -1,5 +1,7 @@
 package org.owasp.dependencycheck.data.ossindex;
 
+import org.sonatype.goodies.packageurl.PackageUrl;
+import org.sonatype.goodies.packageurl.PackageUrl.RenderFlavor;
 import org.sonatype.ossindex.service.client.OssindexClient;
 import org.sonatype.ossindex.service.client.OssindexClientConfiguration;
 import org.sonatype.ossindex.service.client.marshal.Marshaller;
@@ -21,6 +23,11 @@ import java.net.URL;
  * @since ???
  */
 public class OssindexClientFactory {
+    static {
+        // prefer pkg scheme vis scheme-less variant
+        PackageUrl.RenderFlavor.setDefault(RenderFlavor.SCHEME);
+    }
+
     public static OssindexClient create(final Settings settings) {
         OssindexClientConfiguration config = new OssindexClientConfiguration();
 
