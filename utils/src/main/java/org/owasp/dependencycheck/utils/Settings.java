@@ -18,6 +18,7 @@
 package org.owasp.dependencycheck.utils;
 
 import com.google.gson.Gson;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,13 +139,13 @@ public final class Settings {
          * The starts with filter used to exclude CVE entries from the database.
          * By default this is set to 'cpe:2.3:a:' which limits the CVEs imported
          * to just those that are related to applications. If this were set to
-         * just 'cpe:2.3:' the OS, hardware, and application related CVEs would be
-         * imported.
+         * just 'cpe:2.3:' the OS, hardware, and application related CVEs would
+         * be imported.
          */
         public static final String CVE_CPE_STARTS_WITH_FILTER = "cve.cpe.startswith.filter";
         /**
          * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the 2.0 schema.
+         * added CVE entries (last 8 days) using the JSON data feeds.
          */
         public static final String CVE_MODIFIED_JSON = "cve.url.modified";
         /**
@@ -155,7 +156,7 @@ public final class Settings {
         public static final String CVE_ORIGINAL_JSON = "cve.url.original";
         /**
          * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the 2.0 schema.
+         * added CVE entries (last 8 days) using the JSON data feeds.
          */
         public static final String CVE_BASE_JSON = "cve.url.base";
         /**
@@ -426,9 +427,9 @@ public final class Settings {
          */
         public static final String ANALYZER_CENTRAL_QUERY = "analyzer.central.query";
         /**
-         * The path to mono, if available.
+         * The path to dotnet core, if available.
          */
-        public static final String ANALYZER_ASSEMBLY_MONO_PATH = "analyzer.assembly.mono.path";
+        public static final String ANALYZER_ASSEMBLY_DOTNET_PATH = "analyzer.assembly.dotnet.path";
         /**
          * The path to bundle-audit, if available.
          */
@@ -566,6 +567,7 @@ public final class Settings {
 
     /**
      * Initialize the settings object using the given properties.
+     *
      * @param properties the properties to be used with this Settings instance
      * @since 4.0.3
      */
@@ -765,11 +767,12 @@ public final class Settings {
      * before properties loaded from files.
      *
      * @param filePath the path to the properties file to merge.
-     * @throws java.io.FileNotFoundException is thrown when the filePath points to a
-     * non-existent file
-     * @throws java.io.IOException is thrown when there is an exception loading/merging
-     * the properties
+     * @throws java.io.FileNotFoundException is thrown when the filePath points
+     * to a non-existent file
+     * @throws java.io.IOException is thrown when there is an exception
+     * loading/merging the properties
      */
+    @SuppressFBWarnings(justification = "try with resource will clenaup the resources", value = {"OBL_UNSATISFIED_OBLIGATION"})
     public void mergeProperties(@NotNull final File filePath) throws FileNotFoundException, IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             mergeProperties(fis);
@@ -783,11 +786,12 @@ public final class Settings {
      * properties loaded from files.
      *
      * @param filePath the path to the properties file to merge.
-     * @throws java.io.FileNotFoundException is thrown when the filePath points to a
-     * non-existent file
-     * @throws java.io.IOException is thrown when there is an exception loading/merging
-     * the properties
+     * @throws java.io.FileNotFoundException is thrown when the filePath points
+     * to a non-existent file
+     * @throws java.io.IOException is thrown when there is an exception
+     * loading/merging the properties
      */
+    @SuppressFBWarnings(justification = "try with resource will clenaup the resources", value = {"OBL_UNSATISFIED_OBLIGATION"})
     public void mergeProperties(@NotNull final String filePath) throws FileNotFoundException, IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             mergeProperties(fis);
@@ -801,8 +805,8 @@ public final class Settings {
      * before properties loaded from files.
      *
      * @param stream an Input Stream pointing at a properties file to merge
-     * @throws java.io.IOException is thrown when there is an exception loading/merging
-     * the properties
+     * @throws java.io.IOException is thrown when there is an exception
+     * loading/merging the properties
      */
     public void mergeProperties(@NotNull final InputStream stream) throws IOException {
         props.load(stream);
@@ -931,7 +935,8 @@ public final class Settings {
      *
      * If the property is not set then {@code null} will be returned.
      *
-     * @param key the key to get from this {@link org.owasp.dependencycheck.utils.Settings}.
+     * @param key the key to get from this
+     * {@link org.owasp.dependencycheck.utils.Settings}.
      * @return the list or {@code null} if the key wasn't present.
      */
     public String[] getArray(@NotNull final String key) {
@@ -964,8 +969,8 @@ public final class Settings {
      *
      * @param key the key to lookup within the properties file
      * @return the property from the properties file
-     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
-     * the setting
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown
+     * if there is an error retrieving the setting
      */
     public int getInt(@NotNull final String key) throws InvalidSettingException {
         try {
@@ -1007,8 +1012,8 @@ public final class Settings {
      *
      * @param key the key to lookup within the properties file
      * @return the property from the properties file
-     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
-     * the setting
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown
+     * if there is an error retrieving the setting
      */
     public long getLong(@NotNull final String key) throws InvalidSettingException {
         try {
@@ -1027,8 +1032,8 @@ public final class Settings {
      *
      * @param key the key to lookup within the properties file
      * @return the property from the properties file
-     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
-     * the setting
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown
+     * if there is an error retrieving the setting
      */
     public boolean getBoolean(@NotNull final String key) throws InvalidSettingException {
         return Boolean.parseBoolean(getString(key));
@@ -1045,8 +1050,8 @@ public final class Settings {
      * @param defaultValue the default value to return if the setting does not
      * exist
      * @return the property from the properties file
-     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown if there is an error retrieving
-     * the setting
+     * @throws org.owasp.dependencycheck.utils.InvalidSettingException is thrown
+     * if there is an error retrieving the setting
      */
     public boolean getBoolean(@NotNull final String key, boolean defaultValue) throws InvalidSettingException {
         return Boolean.parseBoolean(getString(key, Boolean.toString(defaultValue)));
@@ -1084,8 +1089,8 @@ public final class Settings {
      * string
      * @param dbFileNameKey the settings key for the db filename
      * @return the connection string
-     * @throws java.io.IOException thrown the data directory cannot be created
-     * @throws org.owasp.dependencycheck.utils.InvalidSettingException thrown if there is an invalid setting
+     * @throws IOException thrown the data directory cannot be created
+     * @throws InvalidSettingException thrown if there is an invalid setting
      */
     public String getConnectionString(String connectionStringKey, String dbFileNameKey)
             throws IOException, InvalidSettingException {
@@ -1123,7 +1128,8 @@ public final class Settings {
      * content.
      *
      * @return the data directory to store data files
-     * @throws java.io.IOException is thrown if an java.io.IOException occurs of course...
+     * @throws java.io.IOException is thrown if an java.io.IOException occurs of
+     * course...
      */
     public File getDataDirectory() throws IOException {
         final File path = getDataFile(Settings.KEYS.DATA_DIRECTORY);
@@ -1139,7 +1145,8 @@ public final class Settings {
      * temp directory this method will return the temp directory.
      *
      * @return the data directory to store data files
-     * @throws java.io.IOException is thrown if an java.io.IOException occurs of course...
+     * @throws java.io.IOException is thrown if an java.io.IOException occurs of
+     * course...
      */
     public File getH2DataDirectory() throws IOException {
         final String h2Test = getString(Settings.KEYS.H2_DATA_DIRECTORY);
